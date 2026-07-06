@@ -1,0 +1,13 @@
+app = "REPLACE_WITH_BACKEND_APP"
+primary_region = "nrt"
+
+[build]
+  # Fly will use the Dockerfile at the backend context
+  dockerfile = "Dockerfile"
+
+[[mounts]]
+  source = "uploads"
+  destination = "/app/uploads"
+
+[env]
+  PORT = "5000"

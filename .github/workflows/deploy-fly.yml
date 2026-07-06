@@ -1,0 +1,32 @@
+name: Deploy to Fly.io
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install flyctl
+        run: |
+          curl -L https://fly.io/install.sh | sh
+          echo "::add-path::$HOME/.fly/bin"
+
+      - name: Deploy backend to Fly
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          export PATH="$HOME/.fly/bin:$PATH"
+          flyctl version
+          flyctl deploy --app "${{ secrets.FLY_APP_NAME_BACKEND }}" --config backend/fly.toml --remote-only
+
+      - name: Deploy frontend to Fly
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          export PATH="$HOME/.fly/bin:$PATH"
+          flyctl version
+          flyctl deploy --app "${{ secrets.FLY_APP_NAME_FRONTEND }}" --config frontend/fly.toml --remote-only

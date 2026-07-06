@@ -1,0 +1,13 @@
+app = "REPLACE_WITH_FRONTEND_APP"
+primary_region = "nrt"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[[services]]
+  internal_port = 80
+  protocol = "tcp"
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
