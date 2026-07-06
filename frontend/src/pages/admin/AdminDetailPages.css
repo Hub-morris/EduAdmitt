@@ -1,0 +1,174 @@
+.back-link {
+  display: inline-block;
+  color: var(--primary);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  text-decoration: none;
+}
+
+.back-link:hover { text-decoration: underline; }
+
+.admin-detail-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 1.5rem;
+}
+
+.applicant-sidebar {
+  text-align: center;
+  padding: 2rem 1.5rem;
+}
+
+.applicant-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0 auto 1rem;
+}
+
+.applicant-sidebar h3 { font-size: 1.0625rem; margin-bottom: 0.25rem; }
+.applicant-sidebar p { font-size: 0.875rem; color: var(--gray); margin-bottom: 0.75rem; }
+
+.admin-detail-main { padding: 1.5rem; }
+
+.doc-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.doc-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.doc-name { display: block; font-size: 0.8125rem; color: var(--gray); }
+
+.doc-actions { display: flex; align-items: center; gap: 0.75rem; }
+
+.info-list { display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9375rem; }
+
+.admin-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.qualify-card { padding: 2rem; max-width: 700px; }
+
+.qualify-comparison {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.qualify-box {
+  text-align: center;
+  padding: 1.5rem 2rem;
+  background: var(--bg);
+  border-radius: var(--radius);
+  min-width: 180px;
+}
+
+.qualify-label { display: block; font-size: 0.8125rem; color: var(--gray); margin-bottom: 0.5rem; }
+.qualify-value { display: block; font-size: 2rem; font-weight: 700; color: var(--primary-dark); }
+.qualify-points { display: block; font-size: 0.8125rem; color: var(--gray); margin-top: 0.25rem; }
+
+.qualify-vs { font-weight: 700; color: var(--gray); font-size: 1.25rem; }
+
+.qualify-action { text-align: center; margin-bottom: 1.5rem; }
+.qualify-note { font-size: 0.8125rem; color: var(--gray); margin-top: 0.75rem; }
+
+.qualify-result {
+  padding: 1.25rem;
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.qualify-result.qualified { background: #D1FAE5; color: #065F46; }
+.qualify-result.not-qualified { background: #FEE2E2; color: #991B1B; }
+
+.ai-reasoning {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+.ai-reasoning-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ai-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #1E3A8A;
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
+.ai-source { font-size: 0.75rem; opacity: 0.75; }
+
+.ai-reasoning-body p {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.ai-reasoning-body p:last-child { margin-bottom: 0; }
+
+@media (max-width: 768px) {
+  .admin-detail-layout { grid-template-columns: 1fr; }
+}
+
+.feedback-form-container {
+  background: #F9FAFB;
+  padding: 1.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-top: 1rem;
+}
+
+.feedback-form-container h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+.feedback-form-container .form-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.875rem;
+  resize: vertical;
+}
+
+.feedback-form-container .form-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}

@@ -1,0 +1,48 @@
+.selection-card {
+  padding: 2rem;
+  display: grid;
+  gap: 1.5rem;
+}
+.selection-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.selection-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.programme-degree-badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+.programme-detail-meta {
+  color: var(--text-muted);
+}
+.selection-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.selection-item {
+  padding: 1rem;
+  border: 1px solid var(--border);
+}
+.selection-label {
+  display: block;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+.selection-value {
+  font-weight: 600;
+}
+.programme-summary {
+  padding: 1.5rem;
+}

@@ -1,0 +1,244 @@
+.status-banner {
+  display: block;
+  text-align: center;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  border-radius: var(--radius-sm);
+}
+
+.status-card { padding: 2rem; }
+
+.timeline { position: relative; padding-left: 0.5rem; }
+
+.timeline-item {
+  display: flex;
+  gap: 1.25rem;
+  padding-bottom: 2rem;
+  position: relative;
+}
+
+.timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 17px;
+  top: 40px;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+
+.timeline-item.done:not(:last-child)::before { background: var(--success); }
+
+.timeline-marker {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  background: var(--border);
+  color: var(--gray);
+  z-index: 1;
+}
+
+.timeline-item.done .timeline-marker { background: var(--success); color: white; }
+.timeline-item.active .timeline-marker { background: var(--primary); color: white; }
+.timeline-item.failed .timeline-marker { background: var(--danger); color: white; }
+
+.timeline-content h4 {
+  font-size: 1rem;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.timeline-date { font-size: 0.8125rem; color: var(--gray); }
+
+.timeline-active {
+  display: inline-block;
+  font-size: 0.75rem;
+  background: #FEF3C7;
+  color: #92400E;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  margin-left: 0.5rem;
+}
+
+.status-actions {
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.qualification-insight {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: var(--radius-sm);
+}
+
+.qualification-insight-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.qualification-insight h4 {
+  font-size: 1rem;
+  color: #1E3A8A;
+  margin: 0;
+}
+
+.qualification-insight .ai-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: #1E3A8A;
+  color: white;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.qualification-insight p {
+  font-size: 0.875rem;
+  color: #374151;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.qualification-insight p:last-child { margin-bottom: 0; }
+
+.rejection-notice {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #FEE2E2;
+  color: #991B1B;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+}
+
+.amendments-alert {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FCD34D 100%);
+  border: 2px solid #FBBF24;
+  border-left: 4px solid #F59E0B;
+}
+
+.amendments-alert-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.amendments-alert-header h3 {
+  margin: 0;
+  color: #92400E;
+  font-size: 1.125rem;
+}
+
+.amendment-count {
+  font-size: 0.875rem;
+  background: #FCD34D;
+  color: #78350F;
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.feedback-messages {
+  background: white;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.feedback-item {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.feedback-item:last-child {
+  border-bottom: none;
+}
+
+.feedback-item p {
+  margin: 0 0 0.5rem 0;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.feedback-item small {
+  color: var(--gray);
+  font-size: 0.8125rem;
+}
+
+.rejection-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.rejection-modal {
+  background: white;
+  border-radius: var(--radius-md);
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.rejection-modal-content {
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.rejection-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.rejection-modal h2 {
+  color: #DC2626;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+}
+
+.rejection-modal p {
+  color: #6B7280;
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.rejection-reason {
+  background: #FEF2F2;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  color: #7F1D1D;
+  border-left: 4px solid #DC2626;
+  margin: 1.5rem 0;
+}
+
+.rejection-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+.rejection-actions .btn {
+  flex: 1;
+  max-width: 250px;
+}

@@ -1,0 +1,83 @@
+.programme-card {
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.programme-card:hover { transform: translateY(-4px); }
+
+.programme-card-image {
+  height: 160px;
+  overflow: hidden;
+}
+
+.programme-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.programme-card:hover .programme-card-image img { transform: scale(1.05); }
+
+.programme-card-body {
+  padding: 1.25rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.programme-badge {
+  display: inline-block;
+  background: #EFF6FF;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  margin-bottom: 0.5rem;
+  width: fit-content;
+}
+
+.programme-card h3 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.375rem;
+  line-height: 1.4;
+}
+
+.programme-meta {
+  font-size: 0.8125rem;
+  color: var(--gray);
+  margin-bottom: 0.25rem;
+}
+
+.programme-faculty {
+  font-size: 0.8125rem;
+  color: var(--gray-light);
+  margin-bottom: 0.5rem;
+}
+
+.programme-min-grade {
+  font-size: 0.75rem;
+  color: var(--primary);
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.programme-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.programme-fees {
+  font-weight: 600;
+  color: var(--primary-dark);
+  font-size: 0.875rem;
+}

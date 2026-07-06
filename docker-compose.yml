@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: eduadmit
+      POSTGRES_PASSWORD: eduadmit123
+      POSTGRES_DB: eduadmit
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  backend:
+    build:
+      context: ./backend
+    environment:
+      PORT: "5000"
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: eduadmit
+      DB_PASSWORD: eduadmit123
+      DB_NAME: eduadmit
+      DATABASE_URL: "postgres://eduadmit:eduadmit123@db:5432/eduadmit"
+      JWT_SECRET: "eduadmit-prod-secret"
+    ports:
+      - "5001:5000"
+    restart: unless-stopped
+    volumes:
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "4175:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+
+  uploads:

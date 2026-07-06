@@ -1,0 +1,317 @@
+.letter-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.offer-letter {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 3rem;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  overflow: hidden;
+}
+
+.offer-letter::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/images/logo.png') center center / 220px 220px no-repeat;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.offer-letter::after {
+  content: 'EDUADMIT UNIVERSITY';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-18deg);
+  font-size: 5rem;
+  color: rgba(15,23,42,0.05);
+  letter-spacing: 0.5rem;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.letter-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--primary-dark);
+}
+
+.letter-logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.92);
+  padding: 8px;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 8px 24px rgba(15,23,42,0.08);
+}
+
+.letter-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+@media print {
+  .letter-logo {
+    background: white;
+    box-shadow: none;
+    border-color: rgba(0,0,0,0.12);
+  }
+}
+
+.letter-header h2 {
+  color: var(--primary-dark);
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.letter-header p {
+  color: var(--gray);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.letter-date { margin-bottom: 1.5rem; color: var(--gray); font-size: 0.95rem; }
+
+.letter-greeting { margin-bottom: 1rem; font-weight: 500; }
+
+.letter-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.letter-badge {
+  padding: 0.65rem 0.95rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.letter-body { margin-bottom: 1.5rem; }
+
+.letter-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+
+.letter-table td {
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--border);
+}
+
+.letter-table td:first-child {
+  background: var(--bg);
+  font-weight: 500;
+  width: 40%;
+}
+
+.letter-details-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(180px, 260px);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.letter-address,
+.letter-map {
+  background: #f8fafc;
+  border-radius: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #dbeafe;
+}
+
+.letter-address h4,
+.letter-map p {
+  margin: 0 0 0.75rem;
+}
+
+.letter-address p {
+  margin: 0;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.letter-map-box {
+  width: 100%;
+  min-height: 160px;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: white;
+  border: 1px solid rgba(148,163,184,0.35);
+}
+
+.letter-map-box img {
+  width: 100%;
+  display: block;
+}
+
+.letter-map p {
+  margin-top: 0.85rem;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.letter-section { margin-bottom: 1.5rem; }
+
+.letter-section h4 {
+  color: var(--primary-dark);
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.letter-pre {
+  font-family: inherit;
+  white-space: pre-line;
+  font-size: 0.925rem;
+  color: #374151;
+  margin: 0;
+}
+
+.letter-footer {
+  background: #EFF6FF;
+  border-left: 4px solid var(--primary);
+  padding: 1rem 1.25rem;
+  border-radius: 0.85rem;
+  margin: 1.5rem 0;
+}
+
+.letter-footer p {
+  margin: 0.5rem 0;
+  color: #1f2937;
+  font-size: 0.95rem;
+}
+
+.letter-note {
+  margin-top: 0.75rem;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.letter-closing { margin: 1.5rem 0; }
+
+.letter-signature {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(15,23,42,0.12);
+}
+
+.signature-details {
+  min-width: 260px;
+}
+
+.sig-line {
+  margin-bottom: 0.75rem;
+  font-size: 1.35rem;
+  letter-spacing: 0.2rem;
+  font-family: 'Lucida Handwriting', 'Cursive', sans-serif;
+  color: rgba(15,23,42,0.85);
+}
+
+.sig-name {
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 0.15rem;
+}
+
+.sig-title,
+.sig-office {
+  color: #475569;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.letter-seal {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 4px dashed rgba(29,78,216,0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 1rem;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(15,23,42,0.12);
+  background: radial-gradient(circle at top left, rgba(59,130,246,0.12), transparent 35%),
+              radial-gradient(circle at bottom right, rgba(14,165,233,0.08), transparent 30%),
+              rgba(255,255,255,0.9);
+}
+
+.letter-seal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.35), transparent 60%);
+}
+
+.seal-text {
+  display: block;
+  font-size: 0.85rem;
+  color: #1e3a8a;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.seal-subtext {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.72rem;
+  color: #334155;
+  letter-spacing: 0.18em;
+}
+
+@media print {
+  .navbar, .footer, .no-print { display: none !important; }
+  .offer-letter {
+    box-shadow: none;
+    background: white;
+    color: #0f172a;
+  }
+  .page-title,
+  .page-subtitle {
+    display: block !important;
+  }
+  .letter-seal,
+  .seal-text,
+  .seal-subtext {
+    color: #0f172a !important;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .letter-seal {
+    border-color: #1d4ed8 !important;
+    box-shadow: none !important;
+  }
+  body { background: white; }
+}
+
+@media (max-width: 640px) {
+  .offer-letter { padding: 1.5rem; }
+}
