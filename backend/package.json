@@ -6,7 +6,9 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "seed": "node src/seed.js",
+    "test": "node --test test/*.test.js",
     "test:e2e": "node scripts/e2e-test.js",
+    "test:e2e:docker": "node scripts/e2e-test.js http://localhost:5001/api",
     "test:e2e:full": "node scripts/e2e-runner.js"
   },
   "dependencies": {

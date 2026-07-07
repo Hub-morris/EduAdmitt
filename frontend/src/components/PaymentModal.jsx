@@ -3,6 +3,21 @@ import { motion } from 'framer-motion';
 import api from '../api/client';
 import './PaymentModal.css';
 
+function isPaymentCompleted(data) {
+  if (!data) return false;
+  const status = String(data.status || '').toLowerCase();
+  if (['completed', 'paid', 'success'].includes(status)) return true;
+
+  const payload = data.provider_payload;
+  if (!payload) return false;
+
+  const resultCode = payload.ResultCode
+    ?? payload?.Body?.stkCallback?.ResultCode
+    ?? payload?.providerResponse?.ResultCode;
+
+  return resultCode === 0 || resultCode === '0';
+}
+
 export default function PaymentModal({ amount, reference, programme, paymentId, onCancel, onConfirm }) {
   const [phone, setPhone] = useState('');
   const [phase, setPhase] = useState('ready'); // ready | waiting | success | error
@@ -15,7 +30,7 @@ export default function PaymentModal({ amount, reference, programme, paymentId, 
   };
 
   const handleStatusUpdate = async (data) => {
-    if (data.status === 'completed') {
+    if (isPaymentCompleted(data)) {
       setReceipt(data.provider_payload || { reference, amount, method: 'M-PESA' });
       setPhase('success');
       setTimeout(() => onConfirm(data.provider_payload || {}), 800);
@@ -40,7 +55,7 @@ export default function PaymentModal({ amount, reference, programme, paymentId, 
       await api.post(`/payments/${paymentId}/confirm`, {});
       const data = await fetchPaymentStatus();
       await handleStatusUpdate(data);
-      if (data.status !== 'completed') {
+      if (!isPaymentCompleted(data)) {
         setError('Manual confirmation did not complete the payment. Please try again.');
       }
     } catch (err) {
@@ -155,17 +170,6 @@ export default function PaymentModal({ amount, reference, programme, paymentId, 
               <button className="btn btn-secondary" onClick={refreshStatus}>Refresh status</button>
               <button className="btn btn-secondary" onClick={confirmPaymentManually}>Confirm manually</button>
               <button className="btn btn-secondary" onClick={onCancel}>Cancel</button>
-            </div>
-          </div>
-        )}
-
-        {phase === 'error' && (
-          <div className="modal-content">
-            <h3>Payment Error</h3>
-            <p style={{ color: 'var(--danger)' }}>{error || 'An error occurred during payment.'}</p>
-            <div style={{ display: 'flex', gap: '.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
-              <button className="btn btn-secondary" onClick={confirmPaymentManually}>Confirm manually</button>
-              <button className="btn btn-secondary" onClick={onCancel}>Close</button>
             </div>
           </div>
         )}

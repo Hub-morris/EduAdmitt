@@ -20,13 +20,17 @@ export default function ManageProgrammes() {
   const [imagePreview, setImagePreview] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
 
-  const loadProgrammes = async () => {
+  const loadProgrammes = async (page = 1) => {
     const [progRes, deptRes] = await Promise.all([
-      api.get('/admin/programmes'),
+      api.get('/admin/programmes', { params: { page, limit: 10 } }),
       api.get('/departments'),
     ]);
-    setProgrammes(progRes.data);
+    setProgrammes(progRes.data.data);
+    setPagination(progRes.data.pagination);
+    setCurrentPage(page);
     setDepartments(deptRes.data);
     setLoading(false);
   };
@@ -85,7 +89,7 @@ export default function ManageProgrammes() {
         });
         setMessage('Programme created successfully');
       }
-      await loadProgrammes();
+      await loadProgrammes(currentPage);
       resetForm();
       setShowForm(false);
     } catch (err) {
@@ -125,8 +129,9 @@ export default function ManageProgrammes() {
     if (!confirmTarget) return;
     try {
       await api.delete(`/admin/programmes/${confirmTarget.id}`);
-      setProgrammes(programmes.filter(p => p.id !== confirmTarget.id));
       setMessage(`Programme ${confirmTarget.name} deleted successfully`);
+      setConfirmTarget(null);
+      await loadProgrammes(currentPage);
     } catch (err) {
       setMessage(err.response?.data?.error || 'Failed to delete programme');
     } finally {
@@ -291,6 +296,38 @@ export default function ManageProgrammes() {
             ))}
           </tbody>
         </table>
+
+        {/* Pagination Controls */}
+        {pagination.pages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem', padding: '1rem', flexWrap: 'wrap' }}>
+            <button
+              className="btn btn-sm btn-secondary"
+              onClick={() => loadProgrammes(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                className={`btn btn-sm ${page === currentPage ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => loadProgrammes(page)}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              className="btn btn-sm btn-secondary"
+              onClick={() => loadProgrammes(currentPage + 1)}
+              disabled={currentPage === pagination.pages}
+            >
+              Next
+            </button>
+            <span style={{ marginLeft: '1rem', color: 'var(--gray)', fontSize: '0.875rem' }}>
+              Page {pagination.page} of {pagination.pages} ({pagination.total} total)
+            </span>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

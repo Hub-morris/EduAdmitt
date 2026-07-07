@@ -94,7 +94,7 @@ export default function VerifyApplication() {
                     <span className="doc-name">{doc.original_name}</span>
                   </div>
                   <div className="doc-actions">
-                    <a href={`/uploads/${doc.file_path}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary">View</a>
+                    <a href={`/api/admin/documents/${doc.id}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary">View</a>
                     <span className={`badge badge-${doc.verification_status === 'verified' ? 'success' : 'warning'}`}>{doc.verification_status}</span>
                   </div>
                 </div>
@@ -133,7 +133,7 @@ export default function VerifyApplication() {
               </div>
               <div className="payment-chip">
                 <span className="payment-chip-label">Payment Status</span>
-                <span className={`badge badge-${app.payment_status === 'completed' ? 'success' : 'warning'}`}>{app.payment_status || 'pending'}</span>
+                <span className={`badge badge-${['completed', 'paid'].includes(app.payment_status) ? 'success' : app.payment_status === 'failed' ? 'danger' : 'warning'}`}>{app.payment_status || 'pending'}</span>
               </div>
               <div className="payment-chip">
                 <span className="payment-chip-label">Reference</span>

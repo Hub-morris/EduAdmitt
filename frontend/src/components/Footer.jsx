@@ -18,7 +18,7 @@ export default function Footer() {
         <div>
           <h4>Contact</h4>
           <p>admissions@eduadmit.ac.ke</p>
-          <p>0760876192</p>
+          <p>+254 700 000 000</p>
           <p>Nairobi, Kenya</p>
         </div>
         <div>

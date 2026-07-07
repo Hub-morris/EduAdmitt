@@ -1,11 +1,22 @@
 import axios from 'axios';
 
 const base = import.meta.env.VITE_API_BASE_URL || '/api';
-const api = axios.create({ baseURL: base });
+const api = axios.create({ 
+  baseURL: base,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  
+  // For FormData, remove Content-Type header to let browser set it with boundary
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
+  
   return config;
 });
 

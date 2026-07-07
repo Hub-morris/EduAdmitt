@@ -18,9 +18,9 @@ const navItems = [
   { to: '/admin', label: 'Dashboard', icon: faTachometerAlt, exact: true },
   { to: '/admin/programmes', label: 'Programmes', icon: faBookOpen },
   { to: '/admin/departments', label: 'Departments', icon: faSitemap },
-  { to: '/admin#applications', label: 'Applications', icon: faClipboardList, anchor: 'applications' },
+  { to: '/admin/users', label: 'Manage Users', icon: faUsers },
+  { to: '/admin/applications', label: 'Applications', icon: faClipboardList },
   { to: '/admin#payments', label: 'Payments', icon: faCreditCard, anchor: 'payments' },
-  { to: '/admin#users', label: 'Users', icon: faUsers, anchor: 'users' },
 ];
 
 export default function AdminLayout({ children }) {

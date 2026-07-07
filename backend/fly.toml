@@ -1,5 +1,5 @@
-app = "REPLACE_WITH_BACKEND_APP"
-primary_region = "nrt"
+app = "eduadmit-backend-morris"
+primary_region = "sin"
 
 [build]
   # Fly will use the Dockerfile at the backend context

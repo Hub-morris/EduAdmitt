@@ -1,6 +1,9 @@
 node_modules/
 uploads/*
 !uploads/.gitkeep
+uploads-test/
+backend/uploads/*
+!backend/uploads/.gitkeep
 .env
 dist/
 *.log

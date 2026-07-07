@@ -21,6 +21,8 @@ const QualificationCheck = lazy(() => import('./pages/admin/QualificationCheck')
 const AdmissionOffer = lazy(() => import('./pages/admin/AdmissionOffer'));
 const ManageProgrammes = lazy(() => import('./pages/admin/ManageProgrammes'));
 const ManageDepartments = lazy(() => import('./pages/admin/ManageDepartments'));
+const ManageUsers = lazy(() => import('./pages/admin/ManageUsers'));
+const ManageApplications = lazy(() => import('./pages/admin/ManageApplications'));
 
 function ProtectedRoute({ children, role }) {
   const { user, loading } = useAuth();
@@ -51,6 +53,8 @@ function AppRoutes() {
         <Route path="/admin/admit/:id" element={<ProtectedRoute role="admin"><AdmissionOffer /></ProtectedRoute>} />
         <Route path="/admin/programmes" element={<ProtectedRoute role="admin"><ManageProgrammes /></ProtectedRoute>} />
         <Route path="/admin/departments" element={<ProtectedRoute role="admin"><ManageDepartments /></ProtectedRoute>} />
+        <Route path="/admin/users" element={<ProtectedRoute role="admin"><ManageUsers /></ProtectedRoute>} />
+        <Route path="/admin/applications" element={<ProtectedRoute role="admin"><ManageApplications /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

@@ -3,6 +3,7 @@ import pool from '../config/db.js';
 import { authMiddleware, studentMiddleware } from '../middleware/auth.js';
 import { uploadFields } from '../middleware/upload.js';
 import { gradeToPoints } from '../utils/helpers.js';
+import { isPaymentSuccessful } from '../utils/paymentStatus.js';
 
 const router = express.Router();
 
@@ -54,6 +55,8 @@ router.get('/my-selection', authMiddleware, studentMiddleware, async (req, res) 
 });
 
 router.post('/submit', authMiddleware, studentMiddleware, uploadFields, async (req, res) => {
+  console.log('Applications submit hit - files keys:', Object.keys(req.files || {}));
+  console.log('Uploaded files summary:', Object.entries(req.files || {}).map(([k, v]) => ({ field: k, count: v.length })));
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -63,7 +66,18 @@ router.post('/submit', authMiddleware, studentMiddleware, uploadFields, async (r
       return res.status(404).json({ error: 'Student profile not found' });
     }
 
-    const { programmeId, paymentId } = req.body;
+    const programmeId = Number.parseInt(String(req.body.programmeId ?? ''), 10);
+    const paymentId = Number.parseInt(String(req.body.paymentId ?? ''), 10);
+
+    if (!Number.isFinite(programmeId)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Programme selection is required before submission.' });
+    }
+
+    if (!Number.isFinite(paymentId)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Payment confirmation is required before submission.' });
+    }
 
     // Check for an existing application to this programme
     const existingApplication = await client.query(
@@ -99,19 +113,16 @@ router.post('/submit', authMiddleware, studentMiddleware, uploadFields, async (r
     const requiredDocFields = ['kcse_certificate', 'national_id', 'passport_photo'];
     const missingDocs = requiredDocFields.filter((field) => !req.files?.[field]?.[0]);
     if (missingDocs.length) {
+      console.warn('Missing document fields on submit:', missingDocs);
       await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Please upload all required documents before submitting your application.' });
+      return res.status(400).json({ error: `Missing documents: ${missingDocs.join(', ')}` });
     }
 
     const gradePoints = gradeToPoints(kcseGrade);
 
-    if (!paymentId) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Payment confirmation is required before submission.' });
-    }
-
-    const paymentResult = await client.query('SELECT id, status, application_id FROM payments WHERE id = $1', [paymentId]);
-    if (!paymentResult.rows.length || paymentResult.rows[0].status !== 'completed') {
+    const paymentResult = await client.query('SELECT id, status, application_id, provider_payload FROM payments WHERE id = $1', [paymentId]);
+    const payment = paymentResult.rows[0];
+    if (!payment || !isPaymentSuccessful(payment)) {
       await client.query('ROLLBACK');
       return res.status(400).json({ error: 'Payment must be completed before your application can be submitted.' });
     }
@@ -185,12 +196,15 @@ router.post('/submit', authMiddleware, studentMiddleware, uploadFields, async (r
         );
       }
     }
-
     await client.query('COMMIT');
     res.status(201).json({ message: 'Application submitted successfully', applicationId });
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error(err);
+    console.error('Submit application error:', {
+      message: err.message,
+      stack: err.stack,
+      code: err.code,
+    });
     res.status(500).json({ error: err.message || 'Failed to submit application' });
   } finally {
     client.release();

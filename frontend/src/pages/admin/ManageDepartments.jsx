@@ -18,14 +18,18 @@ export default function ManageDepartments() {
   const [message, setMessage] = useState('');
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
 
-  const loadData = async () => {
+  const loadData = async (page = 1) => {
     try {
       const [deptRes, facultyRes] = await Promise.all([
-        api.get('/admin/departments'),
+        api.get('/admin/departments', { params: { page, limit: 10 } }),
         api.get('/faculties'),
       ]);
-      setDepartments(deptRes.data);
+      setDepartments(deptRes.data.data);
+      setPagination(deptRes.data.pagination);
+      setCurrentPage(page);
       setFaculties(facultyRes.data);
     } catch (err) {
       setMessage(err.response?.data?.error || 'Unable to load departments');
@@ -66,7 +70,7 @@ export default function ManageDepartments() {
         await api.post('/admin/departments', form);
         setMessage('Department created successfully.');
       }
-      await loadData();
+      await loadData(currentPage);
       resetForm();
     } catch (err) {
       setMessage(err.response?.data?.error || 'Failed to save department');
@@ -91,12 +95,14 @@ export default function ManageDepartments() {
     try {
       await api.delete(`/admin/departments/${confirmTarget.id}`);
       setMessage(`Department ${confirmTarget.name} deleted successfully.`);
-      setDepartments(departments.filter((d) => d.id !== confirmTarget.id));
       setConfirmTarget(null);
+      await loadData(currentPage);
     } catch (err) {
       setMessage(err.response?.data?.error || 'Failed to delete department');
     }
   };
+
+  if (loading) return <AdminLayout><div className="page-loader"><div className="spinner" /></div></AdminLayout>;
 
   return (
     <AdminLayout>
@@ -170,6 +176,38 @@ export default function ManageDepartments() {
             ))}
           </tbody>
         </table>
+
+        {/* Pagination Controls */}
+        {pagination.pages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem', padding: '1rem', flexWrap: 'wrap' }}>
+            <button
+              className="btn btn-sm btn-secondary"
+              onClick={() => loadData(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                className={`btn btn-sm ${page === currentPage ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => loadData(page)}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              className="btn btn-sm btn-secondary"
+              onClick={() => loadData(currentPage + 1)}
+              disabled={currentPage === pagination.pages}
+            >
+              Next
+            </button>
+            <span style={{ marginLeft: '1rem', color: 'var(--gray)', fontSize: '0.875rem' }}>
+              Page {pagination.page} of {pagination.pages} ({pagination.total} total)
+            </span>
+          </div>
+        )}
       </div>
 
       {confirmTarget && (

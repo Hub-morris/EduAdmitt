@@ -2,7 +2,6 @@ import express from 'express';
 import pool from '../config/db.js';
 import { authMiddleware, studentMiddleware } from '../middleware/auth.js';
 import PDFDocument from 'pdfkit';
-import { downloadImageBuffer } from '../utils/mapImage.js';
 
 const router = express.Router();
 
@@ -147,15 +146,12 @@ router.get('/:applicationId/pdf', authMiddleware, async (req, res) => {
 
     doc.fontSize(10).fillColor('#1E3A8A').text('Campus Location', col2X, sectionY, { underline: true });
     doc.rect(mapX, mapY, mapWidth, mapHeight).fillAndStroke('#F8FAFC', '#DBEAFE');
-
-    try {
-      const mapImageBuffer = await downloadImageBuffer('https://tile.openstreetmap.org/14/9867/8250.png');
-      doc.image(mapImageBuffer, mapX + 10, mapY + 8, { width: mapWidth - 20, height: mapHeight - 20 });
-    } catch (mapError) {
-      console.warn('Campus map image could not be loaded for PDF:', mapError.message);
-      doc.fontSize(8).fillColor('#64748B').text('Campus map preview unavailable in this PDF export.', mapX + 10, mapY + 35, { width: mapWidth - 20, align: 'center' });
-    }
-
+    doc.image(
+      'https://tile.openstreetmap.org/14/9867/8250.png',
+      mapX + 10,
+      mapY + 8,
+      { width: mapWidth - 20, height: mapHeight - 20 }
+    );
     doc.fontSize(8).fillColor('#475569').text('EduAdmit campus location for registration and orientation.', mapX, mapY + mapHeight + 4, { width: mapWidth });
 
     doc.moveDown(6.0);
@@ -187,7 +183,7 @@ router.get('/:applicationId/pdf', authMiddleware, async (req, res) => {
     doc.rect(35, doc.y, 4, 70).fillAndStroke('#2563EB', '#2563EB');
     
     doc.fontSize(9).fillColor('#1F2937');
-    doc.text('Please complete your acceptance and registration steps before the reporting date. For questions about enrollment, contact the Office of Admissions at admissions@eduadmit.edu or call 0760876192.', 43, doc.y + 3, { width: 435 });
+    doc.text('Please complete your acceptance and registration steps before the reporting date. For questions about enrollment, contact the Office of Admissions at admissions@eduadmit.edu or call +1 (800) 555-0100.', 43, doc.y + 3, { width: 435 });
     
     doc.fontSize(8).fillColor('#475569');
     doc.text('This offer is subject to the terms and conditions of EduAdmit University.', 43, doc.y + 10, { width: 435 });

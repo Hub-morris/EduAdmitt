@@ -20,15 +20,15 @@ export default function AdminDashboard() {
     Promise.all([
       api.get('/admin/dashboard'),
       api.get('/admin/applications'),
-      api.get('/admin/payments'),
-      api.get('/admin/users'),
+      api.get('/admin/payments', { params: { page: 1, limit: 5 } }),
+      api.get('/admin/users', { params: { page: 1, limit: 5 } }),
     ])
       .then(([dashRes, appsRes, paymentsRes, usersRes]) => {
         if (!isMounted) return;
         setData(dashRes.data);
-        setApplications(appsRes.data);
-        setPayments(paymentsRes.data);
-        setUsers(usersRes.data);
+        setApplications(appsRes.data?.data || appsRes.data);
+        setPayments(paymentsRes.data.data || paymentsRes.data);
+        setUsers(usersRes.data.data || usersRes.data);
         setError('');
       })
       .catch((err) => {

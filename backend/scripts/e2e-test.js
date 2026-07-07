@@ -70,7 +70,8 @@ async function run() {
     ok('Health check');
   } catch (e) {
     fail('Health check', e.message);
-    console.error('\nStart the backend first: cd backend && npm run dev');
+    console.error('\nStart the backend first: cd backend && npm run dev (port 5000)');
+    console.error('Or with Docker: docker compose up -d (port 5001) — then run: npm run test:e2e:docker');
     process.exit(1);
   }
 

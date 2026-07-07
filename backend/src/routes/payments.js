@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/db.js';
 import { authMiddleware, adminMiddleware, studentMiddleware } from '../middleware/auth.js';
+import { isMpesaResultSuccessful } from '../utils/paymentStatus.js';
 
 const router = express.Router();
 
@@ -27,15 +28,29 @@ const getMpesaAccessToken = async (config) => {
   const baseUrl = config.env === 'production'
     ? 'https://api.safaricom.co.ke'
     : 'https://sandbox.safaricom.co.ke';
-  const response = await fetch(`${baseUrl}/oauth/v1/generate?grant_type=client_credentials`, {
-    method: 'GET',
-    headers: { Authorization: `Basic ${auth}` },
-  });
-  const payload = await response.json();
-  if (!response.ok || !payload.access_token) {
-    throw new Error(payload.error_description || 'Failed to obtain M-PESA access token');
+  
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+  
+  try {
+    const response = await fetch(`${baseUrl}/oauth/v1/generate?grant_type=client_credentials`, {
+      method: 'GET',
+      headers: { Authorization: `Basic ${auth}` },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    const payload = await response.json();
+    if (!response.ok || !payload.access_token) {
+      throw new Error(payload.error_description || 'Failed to obtain M-PESA access token');
+    }
+    return payload.access_token;
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === 'AbortError') {
+      throw new Error('M-PESA authentication request timed out. Please try again.');
+    }
+    throw err;
   }
-  return payload.access_token;
 };
 
 const getMpesaTimestamp = () => {
@@ -79,33 +94,46 @@ const initiateMpesaStkPush = async (payment, phone, req) => {
     ? 'https://api.safaricom.co.ke'
     : 'https://sandbox.safaricom.co.ke';
 
-  const response = await fetch(`${baseUrl}/mpesa/stkpush/v1/processrequest`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      BusinessShortCode: config.shortcode,
-      Password: password,
-      Timestamp: timestamp,
-      TransactionType: 'CustomerPayBillOnline',
-      Amount: amount,
-      PartyA: phoneNumber,
-      PartyB: config.shortcode,
-      PhoneNumber: phoneNumber,
-      CallBackURL: callbackUrl,
-      AccountReference: payment.reference,
-      TransactionDesc: 'EduAdmit application fee',
-    }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-  const payload = await response.json();
-  if (!response.ok || payload.ResponseCode !== '0') {
-    throw new Error(payload.errorMessage || payload.ResponseDescription || 'M-PESA STK push request failed');
+  try {
+    const response = await fetch(`${baseUrl}/mpesa/stkpush/v1/processrequest`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        BusinessShortCode: config.shortcode,
+        Password: password,
+        Timestamp: timestamp,
+        TransactionType: 'CustomerPayBillOnline',
+        Amount: amount,
+        PartyA: phoneNumber,
+        PartyB: config.shortcode,
+        PhoneNumber: phoneNumber,
+        CallBackURL: callbackUrl,
+        AccountReference: payment.reference,
+        TransactionDesc: 'EduAdmit application fee',
+      }),
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeout);
+    const payload = await response.json();
+    if (!response.ok || payload.ResponseCode !== '0') {
+      throw new Error(payload.errorMessage || payload.ResponseDescription || 'M-PESA STK push request failed');
+    }
+
+    return payload;
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === 'AbortError') {
+      throw new Error('M-PESA payment request timed out. Please try again.');
+    }
+    throw err;
   }
-
-  return payload;
 };
 
 // Create a payment reference for an application or a programme
@@ -250,7 +278,7 @@ router.post('/callback', async (req, res) => {
     const body = req.body;
     const callbackBody = body?.Body?.stkCallback || body;
     const resultCode = callbackBody?.ResultCode;
-    const status = resultCode === 0 ? 'completed' : 'failed';
+    const status = isMpesaResultSuccessful(resultCode) ? 'completed' : 'failed';
 
     let paymentRes = { rows: [] };
     if (paymentId) {

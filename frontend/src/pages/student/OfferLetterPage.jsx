@@ -139,11 +139,11 @@ export default function OfferLetterPage() {
 
             <div className="letter-map">
               <div className="letter-map-box">
-                <img
-                  src="https://tile.openstreetmap.org/14/9867/8250.png"
-                  alt="Campus map"
-                  crossOrigin="anonymous"
+                <iframe
+                  title="Campus map"
+                  src="https://www.openstreetmap.org/export/embed.html?bbox=36.807,-1.296,36.827,-1.276&layer=mapnik&marker=-1.286389,36.817223"
                   loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
                 />
               </div>
               <p>Campus location for your admission and registration.</p>
@@ -163,7 +163,7 @@ export default function OfferLetterPage() {
           <div className="letter-footer">
             <p>
               Please complete your acceptance and registration steps before the reporting date. For questions about enrollment,
-              contact the Office of Admissions at <strong>admissions@eduadmit.edu</strong> or call <strong>0760876192</strong>.
+              contact the Office of Admissions at <strong>admissions@eduadmit.edu</strong> or call <strong>+1 (800) 555-0100</strong>.
             </p>
             <p className="letter-note">This offer is subject to the terms and conditions of EduAdmit University.</p>
           </div>
