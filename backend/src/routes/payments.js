@@ -169,29 +169,58 @@ router.post('/:id/stk-push', authMiddleware, studentMiddleware, async (req, res)
   try {
     const { id } = req.params;
     const { phone } = req.body;
-    const payRes = await pool.query('SELECT * FROM payments WHERE id = $1', [id]);
-    if (!payRes.rows.length) return res.status(404).json({ error: 'Payment not found' });
+    // Use a transaction + SELECT FOR UPDATE to avoid parallel initiations
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const payRes = await client.query('SELECT * FROM payments WHERE id = $1 FOR UPDATE', [id]);
+      if (!payRes.rows.length) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Payment not found' });
+      }
 
-    const payment = payRes.rows[0];
-    const providerResponse = await initiateMpesaStkPush(payment, phone, req);
+      const payment = payRes.rows[0];
 
-    const providerPayload = {
-      phone,
-      transaction: providerResponse.MerchantRequestID || `STK-${Date.now()}`,
-      reference: payment.reference,
-      amount: payment.amount,
-      method: 'M-PESA',
-      time: new Date().toISOString(),
-      status: 'initiated',
-      providerResponse,
-    };
+      // If an STK push has been initiated recently for this payment, avoid re-initiating.
+      const existingPayload = payment.provider_payload || {};
+      const alreadyInitiated = existingPayload?.providerResponse?.CheckoutRequestID || existingPayload?.providerResponse?.MerchantRequestID;
+      if (alreadyInitiated) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({ error: 'STK push already initiated for this payment', reference: payment.reference });
+      }
 
-    await pool.query(
-      'UPDATE payments SET status = $1, provider = $2, provider_payload = $3, updated_at = NOW() WHERE id = $4',
-      ['pending', 'mpesa', providerPayload, id]
-    );
+      // Mark as initiating to prevent races
+      const initiatingMarker = { initiating: true, phone };
+      await client.query('UPDATE payments SET provider_payload = $1, updated_at = NOW() WHERE id = $2', [initiatingMarker, id]);
+      await client.query('COMMIT');
 
-    res.json({ initiated: true, provider: 'mpesa', reference: payment.reference, amount: payment.amount, providerResponse });
+      // Perform the external STK push call outside the transaction
+      const providerResponse = await initiateMpesaStkPush(payment, phone, req);
+
+      const providerPayload = {
+        phone,
+        transaction: providerResponse.MerchantRequestID || `STK-${Date.now()}`,
+        reference: payment.reference,
+        amount: payment.amount,
+        method: 'M-PESA',
+        time: new Date().toISOString(),
+        status: 'initiated',
+        providerResponse,
+      };
+
+      // Save the provider response
+      await pool.query(
+        'UPDATE payments SET status = $1, provider = $2, provider_payload = $3, updated_at = NOW() WHERE id = $4',
+        ['pending', 'mpesa', providerPayload, id]
+      );
+
+      res.json({ initiated: true, provider: 'mpesa', reference: payment.reference, amount: payment.amount, providerResponse });
+    } catch (txErr) {
+      try { await client.query('ROLLBACK'); } catch (e) { /* ignore */ }
+      throw txErr;
+    } finally {
+      client.release();
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message || 'Failed to initiate M-PESA payment' });
