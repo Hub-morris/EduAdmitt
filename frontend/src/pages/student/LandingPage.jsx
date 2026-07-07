@@ -60,7 +60,7 @@ export default function LandingPage() {
       <section className="quick-links-section">
         <div className="container">
           <FadeInStagger className="quick-links-grid">
-            {quickLinks.map((link) => (
+            {(quickLinks || []).map((link) => (
               <FadeInItem key={link.title}>
                 <Link to={link.to} className="quick-link-card">
                   <FontAwesomeIcon icon={link.icon} className="quick-link-icon" aria-hidden="true" />
@@ -94,7 +94,7 @@ export default function LandingPage() {
             </div>
           </FadeIn>
           <div className="programmes-grid">
-            {programmes.map((p, i) => (
+            {(programmes || []).map((p, i) => (
               <motion.div
                 key={p.id}
                 initial={{ opacity: 0, y: 20 }}
