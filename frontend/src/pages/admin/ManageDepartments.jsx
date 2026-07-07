@@ -27,10 +27,10 @@ export default function ManageDepartments() {
         api.get('/admin/departments', { params: { page, limit: 10 } }),
         api.get('/faculties'),
       ]);
-      setDepartments(deptRes.data.data);
+      setDepartments(Array.isArray(deptRes.data.data) ? deptRes.data.data : (deptRes.data && Array.isArray(deptRes.data.departments) ? deptRes.data.departments : []));
       setPagination(deptRes.data.pagination);
       setCurrentPage(page);
-      setFaculties(facultyRes.data);
+      setFaculties(Array.isArray(facultyRes.data) ? facultyRes.data : (facultyRes.data && Array.isArray(facultyRes.data.faculties) ? facultyRes.data.faculties : []));
     } catch (err) {
       setMessage(err.response?.data?.error || 'Unable to load departments');
     } finally {
@@ -127,7 +127,7 @@ export default function ManageDepartments() {
                 <label className="form-label">Faculty</label>
                 <select name="facultyId" className="form-select" value={form.facultyId} onChange={handleChange} required>
                   <option value="">Select a faculty...</option>
-                  {faculties.map((faculty) => (
+                  {(faculties || []).map((faculty) => (
                     <option key={faculty.id} value={faculty.id}>{faculty.name}</option>
                   ))}
                 </select>
@@ -161,7 +161,7 @@ export default function ManageDepartments() {
             </tr>
           </thead>
           <tbody>
-            {departments.map((department) => (
+            {(departments || []).map((department) => (
               <tr key={department.id}>
                 <td>{department.name}</td>
                 <td>{department.faculty_name}</td>

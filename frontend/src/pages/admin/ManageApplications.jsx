@@ -15,7 +15,7 @@ export default function ManageApplications() {
     try {
       setLoading(true);
       const res = await api.get('/admin/applications', { params: { page, limit: 10 } });
-      setApplications(res.data.data);
+      setApplications(Array.isArray(res.data.data) ? res.data.data : []);
       setPagination(res.data.pagination);
       setCurrentPage(page);
     } catch (err) {

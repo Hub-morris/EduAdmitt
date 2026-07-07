@@ -29,9 +29,9 @@ export default function ProgrammesPage() {
       api.get('/filters'),
       api.get('/departments'),
     ]).then(([facRes, filterRes, deptRes]) => {
-      setFaculties(facRes.data);
-      setFilters(filterRes.data);
-      setDepartments(deptRes.data);
+      setFaculties(Array.isArray(facRes.data) ? facRes.data : (facRes.data && Array.isArray(facRes.data.faculties) ? facRes.data.faculties : []));
+      setFilters(filterRes.data || {});
+      setDepartments(Array.isArray(deptRes.data) ? deptRes.data : (deptRes.data && Array.isArray(deptRes.data.departments) ? deptRes.data.departments : []));
     });
   }, []);
 
@@ -53,7 +53,10 @@ export default function ProgrammesPage() {
     if (maxCost) params.set('maxCost', maxCost);
 
     api.get(`/programmes?${params}`)
-      .then(({ data }) => setProgrammes(data))
+      .then(({ data }) => {
+        const list = Array.isArray(data) ? data : (data && Array.isArray(data.programmes) ? data.programmes : []);
+        setProgrammes(list);
+      })
       .finally(() => setLoading(false));
   }, [search, facultyId, departmentId, type, degree, minCost, maxCost]);
 
@@ -94,28 +97,28 @@ export default function ProgrammesPage() {
               <label className="form-label">Faculty</label>
               <select className="form-select" value={facultyId} onChange={(e) => setFacultyId(e.target.value)}>
                 <option value="">All Faculties</option>
-                {faculties.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+                {(faculties || []).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
             </div>
             <div className="form-group">
               <label className="form-label">Department</label>
               <select className="form-select" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
                 <option value="">All Departments</option>
-                {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                {(departments || []).map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
             <div className="form-group">
               <label className="form-label">Type</label>
               <select className="form-select" value={type} onChange={(e) => setType(e.target.value)}>
                 <option value="">All Types</option>
-                {filters.types?.map((t) => <option key={t} value={t}>{t}</option>)}
+                {(filters.types || []).map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
             <div className="form-group">
               <label className="form-label">Degree</label>
               <select className="form-select" value={degree} onChange={(e) => setDegree(e.target.value)}>
                 <option value="">All Degrees</option>
-                {filters.degrees?.map((d) => <option key={d} value={d}>{d}</option>)}
+                {(filters.degrees || []).map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
             <div className="form-group">
@@ -149,7 +152,7 @@ export default function ProgrammesPage() {
               <>
                 <p className="results-count">{programmes.length} programme{programmes.length !== 1 ? 's' : ''} found</p>
                 <div className="programmes-grid">
-                  {programmes.map((p) => <ProgrammeCard key={p.id} programme={p} />)}
+                  {(programmes || []).map((p) => <ProgrammeCard key={p.id} programme={p} />)}
                 </div>
               </>
             )}

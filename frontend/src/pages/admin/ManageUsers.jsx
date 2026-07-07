@@ -16,7 +16,7 @@ export default function ManageUsers() {
       const res = await api.get('/admin/users', {
         params: { page, limit: 10 }
       });
-      setUsers(res.data.data);
+      setUsers(Array.isArray(res.data.data) ? res.data.data : []);
       setPagination(res.data.pagination);
       setCurrentPage(page);
     } catch (err) {
@@ -65,7 +65,7 @@ export default function ManageUsers() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
+                {(users || []).map((user) => (
                   <tr key={user.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={{ padding: '1rem' }}>{user.full_name}</td>
                     <td style={{ padding: '1rem' }}>{user.email}</td>

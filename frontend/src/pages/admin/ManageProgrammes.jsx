@@ -28,10 +28,10 @@ export default function ManageProgrammes() {
       api.get('/admin/programmes', { params: { page, limit: 10 } }),
       api.get('/departments'),
     ]);
-    setProgrammes(progRes.data.data);
-    setPagination(progRes.data.pagination);
+    setProgrammes(Array.isArray(progRes.data.data) ? progRes.data.data : []);
+    setPagination(progRes.data.pagination || {});
     setCurrentPage(page);
-    setDepartments(deptRes.data);
+    setDepartments(Array.isArray(deptRes.data) ? deptRes.data : (deptRes.data && Array.isArray(deptRes.data.departments) ? deptRes.data.departments : []));
     setLoading(false);
   };
 
@@ -164,7 +164,7 @@ export default function ManageProgrammes() {
                 <label className="form-label">Department</label>
                 <select name="departmentId" className="form-select" value={form.departmentId} onChange={handleChange} required>
                   <option value="">Select...</option>
-                  {departments.map(d => <option key={d.id} value={d.id}>{d.name} ({d.faculty_name})</option>)}
+                  {(departments || []).map(d => <option key={d.id} value={d.id}>{d.name} ({d.faculty_name})</option>)}
                 </select>
               </div>
               <div className="form-group">
@@ -277,7 +277,7 @@ export default function ManageProgrammes() {
             </tr>
           </thead>
           <tbody>
-            {programmes.map(p => (
+            {(programmes || []).map(p => (
               <tr key={p.id}>
                 <td>
                   {p.image_url ? <img src={p.image_url} alt={p.name} style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '8px' }} /> : '—'}
