@@ -95,7 +95,7 @@ export default function StatusPage() {
               <h3>⚠️ Amendments Required</h3>
               <span className="amendment-count">Amendment Request #{status.amendment_count}</span>
             </div>
-            {status.feedback && status.feedback.length > 0 && (
+            {Array.isArray(status.feedback) && status.feedback.length > 0 && (
               <div className="feedback-messages">
                 {status.feedback.map((msg, idx) => (
                   <div key={idx} className="feedback-item">
@@ -105,6 +105,7 @@ export default function StatusPage() {
                 ))}
               </div>
             )}
+
             <Link to="/apply" className="btn btn-primary" style={{ marginTop: '1rem' }}>
               Amend Application
             </Link>
@@ -183,7 +184,7 @@ export default function StatusPage() {
             </div>
           )}
 
-          {status.qualification_reasoning && (
+          {typeof status.qualification_reasoning === 'string' && (
             <div className="qualification-insight card">
               <div className="qualification-insight-header">
                 <h4>Qualification Analysis</h4>

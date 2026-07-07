@@ -29,7 +29,7 @@ export default function VerifyApplication() {
     try {
       const payload = {
         status,
-        documents: app.documents?.map((d) => ({ id: d.id, status: status === 'verified' ? 'verified' : d.verification_status })),
+        documents: Array.isArray(app.documents) ? app.documents.map((d) => ({ id: d.id, status: status === 'verified' ? 'verified' : d.verification_status })) : [],
       };
       
       if (status === 'amendments_needed' && amendmentMessage) {

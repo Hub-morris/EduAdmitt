@@ -31,7 +31,9 @@ export function getRelevantImageUrl(programme, size = '400x200') {
   }
   
   // Use Lorem Flickr - a reliable image placeholder service
-  const [width, height] = size.split('x');
-  return `https://loremflickr.com/${width}/${height}/${selectedKeyword}`;
+  const [width, height] = String(size).split('x');
+  const safeWidth = Number(width) || 400;
+  const safeHeight = Number(height) || 200;
+  return `https://loremflickr.com/${safeWidth}/${safeHeight}/${selectedKeyword}`;
 }
 

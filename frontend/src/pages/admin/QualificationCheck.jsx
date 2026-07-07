@@ -89,9 +89,9 @@ export default function QualificationCheck() {
                   <span className="ai-source">{result.reasoningSource === 'openai' ? 'Powered by OpenAI' : 'Rule-based analysis'}</span>
                 </div>
                 <div className="ai-reasoning-body">
-                  {result.reasoning.split('\n\n').map((para, i) => (
+                  {typeof result.reasoning === 'string' ? result.reasoning.split('\n\n').map((para, i) => (
                     <p key={i}>{para.replace(/\*\*(.*?)\*\*/g, '$1')}</p>
-                  ))}
+                  )) : null}
                 </div>
               </div>
             )}
