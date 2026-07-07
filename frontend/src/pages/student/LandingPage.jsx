@@ -24,7 +24,10 @@ export default function LandingPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get('/programmes').then(({ data }) => setProgrammes(data.slice(0, 6)));
+    api.get('/programmes').then(({ data }) => {
+      const list = Array.isArray(data) ? data : (data && Array.isArray(data.programmes) ? data.programmes : []);
+      setProgrammes(list.slice(0, 6));
+    });
     api.get('/school').then(({ data }) => setSchool(data));
   }, []);
 
