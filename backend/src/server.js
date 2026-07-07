@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { initDb } from './config/db.js';
+import { seedData } from './seed.js';
 import authRoutes from './routes/auth.js';
 import programmeRoutes from './routes/programmes.js';
 import applicationRoutes from './routes/applications.js';
@@ -33,7 +34,7 @@ app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
 async function start() {
   try {
-    await initDb();
+    await seedData();
     const server = app.listen(PORT, () => {
       console.log(`EduAdmit API running on http://localhost:${PORT}`);
     });

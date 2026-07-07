@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import pool, { initDb } from './config/db.js';
+import { fileURLToPath } from 'url';
 
 const defaultFacultyName = 'General Studies';
 const defaultDepartments = [
@@ -52,7 +53,7 @@ const defaultDepartments = [
   'Environmental Engineering',
 ];
 
-async function seed() {
+export async function seedData() {
   await initDb();
 
   const adminCount = await pool.query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
@@ -94,7 +95,6 @@ async function seed() {
 
   await seedProgrammes();
   console.log('Default institution departments and programmes seeded.');
-  process.exit(0);
 }
 
 const sampleProgrammes = [
@@ -211,7 +211,10 @@ async function seedProgrammes() {
   }
 }
 
-seed().catch(err => {
-  console.error('Seed failed:', err);
-  process.exit(1);
-});
+const __filename = fileURLToPath(import.meta.url);
+if (process.argv[1] === __filename) {
+  seedData().catch((err) => {
+    console.error('Seed failed:', err);
+    process.exit(1);
+  }).finally(() => process.exit(0));
+}
