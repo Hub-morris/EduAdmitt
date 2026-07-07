@@ -25,10 +25,10 @@ export default function AdminDashboard() {
     ])
       .then(([dashRes, appsRes, paymentsRes, usersRes]) => {
         if (!isMounted) return;
-        setData(dashRes.data);
-        setApplications(appsRes.data?.data || appsRes.data);
-        setPayments(paymentsRes.data.data || paymentsRes.data);
-        setUsers(usersRes.data.data || usersRes.data);
+        setData(dashRes.data || {});
+        setApplications(Array.isArray(appsRes.data?.data) ? appsRes.data.data : (Array.isArray(appsRes.data) ? appsRes.data : []));
+        setPayments(Array.isArray(paymentsRes.data?.data) ? paymentsRes.data.data : (Array.isArray(paymentsRes.data) ? paymentsRes.data : []));
+        setUsers(Array.isArray(usersRes.data?.data) ? usersRes.data.data : (Array.isArray(usersRes.data) ? usersRes.data : []));
         setError('');
       })
       .catch((err) => {
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
           <tbody>
             {payments.length === 0 ? (
               <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--gray)' }}>No payments yet</td></tr>
-            ) : payments.map((payment) => (
+            ) : (payments || []).map((payment) => (
               <tr key={payment.id}>
                 <td>{payment.student_name || '—'}</td>
                 <td>{payment.reference}</td>
@@ -233,7 +233,7 @@ export default function AdminDashboard() {
           <tbody>
             {users.length === 0 ? (
               <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--gray)' }}>No users yet</td></tr>
-            ) : users.map((user) => (
+            ) : (users || []).map((user) => (
               <tr key={user.id}>
                 <td>{user.full_name || '—'}</td>
                 <td>{user.email}</td>
@@ -262,7 +262,7 @@ export default function AdminDashboard() {
           <tbody>
             {applications.length === 0 ? (
               <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--gray)' }}>No applications yet</td></tr>
-            ) : applications.map((app) => {
+            ) : (applications || []).map((app) => {
               const action = getActionLink(app);
               return (
                 <tr key={app.id}>
