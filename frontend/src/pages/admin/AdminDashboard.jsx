@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import AdminLayout from '../../components/AdminLayout';
 import FadeIn from '../../components/FadeIn';
 import api, { STATUS_LABELS, formatDate } from '../../api/client';
@@ -52,6 +52,24 @@ export default function AdminDashboard() {
     applications: parseInt(d.count),
   }));
 
+  const statusData = [
+    { name: 'Pending', value: Number(stats.pending || 0) },
+    { name: 'Under Verification', value: Number(stats.under_verification || 0) },
+    { name: 'Qualified', value: Number(stats.qualified || 0) },
+    { name: 'Rejected', value: Number(stats.rejected || 0) },
+    { name: 'Admitted', value: Number(stats.admitted || 0) },
+  ];
+
+  const pieStatusData = statusData.filter((entry) => entry.value > 0);
+  const statusColors = ['#F59E0B', '#2563EB', '#10B981', '#EF4444', '#8B5CF6'];
+
+  const summaryCards = [
+    { label: 'Total Applications', value: stats.total, class: 'blue', description: 'All submitted applications' },
+    { label: 'Pending Review', value: stats.pending, class: 'orange', description: 'Awaiting admin review' },
+    { label: 'Rejected', value: stats.rejected, class: 'red', description: 'Declined applications' },
+    { label: 'Admitted', value: stats.admitted, class: 'green', description: 'Students admitted' },
+  ];
+
   const getActionLink = (app) => {
     if (app.verification_status === 'pending') return `/admin/verify/${app.id}`;
     if (app.qualification_status === 'pending' && app.verification_status === 'verified') return `/admin/qualify/${app.id}`;
@@ -99,35 +117,61 @@ export default function AdminDashboard() {
         <p className="page-subtitle">Overview of admission applications</p>
       </FadeIn>
 
-      <div className="grid-4" style={{ marginBottom: '2rem' }}>
-        {[
-          { label: 'Total Applications', value: stats.total, class: 'blue' },
-          { label: 'Under Verification', value: stats.under_verification, class: 'orange' },
-          { label: 'Qualified', value: stats.qualified, class: 'green' },
-          { label: 'Admitted', value: stats.admitted, class: 'purple' },
-        ].map((s, i) => (
+      <div className="grid-4 dashboard-summary" style={{ marginBottom: '2rem' }}>
+        {summaryCards.map((s, i) => (
           <motion.div key={s.label} className={`stat-card ${s.class}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
             <div className="stat-value">{s.value || 0}</div>
             <div className="stat-label">{s.label}</div>
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="grid-4" style={{ marginBottom: '2rem' }}>
-        {[
-          { label: 'Total Payments', value: paymentStats.total_payments, class: 'blue' },
-          { label: 'Completed', value: paymentStats.completed, class: 'green' },
-          { label: 'Pending', value: paymentStats.pending, class: 'orange' },
-          { label: 'Failed', value: paymentStats.failed, class: 'red' },
-        ].map((s, i) => (
-          <motion.div key={s.label} className={`stat-card ${s.class}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: (i + 4) * 0.1 }}>
-            <div className="stat-value">{s.value || 0}</div>
-            <div className="stat-label">{s.label}</div>
+            <p style={{ color: 'var(--gray)', marginTop: '0.75rem', fontSize: '0.9rem' }}>{s.description}</p>
           </motion.div>
         ))}
       </div>
 
       <div className="grid-2" style={{ marginBottom: '2rem' }}>
+        <div className="card chart-card">
+          <h3 style={{ marginBottom: '1rem', color: 'var(--primary-dark)' }}>Applications Over Time</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+              <Tooltip />
+              <Line type="monotone" dataKey="applications" stroke="#2563EB" strokeWidth={3} dot={{ fill: '#2563EB' }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="card chart-card">
+          <h3 style={{ marginBottom: '1rem', color: 'var(--primary-dark)' }}>Application Status Distribution</h3>
+          {pieStatusData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <PieChart>
+                <Pie
+                  data={pieStatusData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={100}
+                  paddingAngle={4}
+                  label={({ name, percent }) => `${name} ${Math.round(percent * 100)}%`}
+                  labelLine={false}
+                >
+                  {pieStatusData.map((entry, index) => (
+                    <Cell key={entry.name} fill={statusColors[index % statusColors.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => `${value}`} />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ minHeight: 280, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gray)' }}>
+              No status distribution data available yet.
+            </div>
+          )}
+        </div>
+      </div>
         <div className="card" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
             <div>
@@ -148,7 +192,6 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
-      </div>
 
       <div className="grid-4" style={{ marginBottom: '2rem' }}>
         {[
@@ -162,19 +205,6 @@ export default function AdminDashboard() {
             <div className="stat-label">{s.label}</div>
           </motion.div>
         ))}
-      </div>
-
-      <div id="applications" className="card" style={{ marginBottom: '2rem', padding: '1.5rem' }}>
-        <h3 style={{ marginBottom: '1rem', color: 'var(--primary-dark)' }}>Applications Over Time</h3>
-        <ResponsiveContainer width="100%" height={280}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-            <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-            <Tooltip />
-            <Line type="monotone" dataKey="applications" stroke="#2563EB" strokeWidth={2} dot={{ fill: '#2563EB' }} />
-          </LineChart>
-        </ResponsiveContainer>
       </div>
 
       <div id="payments" className="card table-wrap" style={{ marginBottom: '2rem' }}>
