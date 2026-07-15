@@ -120,31 +120,9 @@ router.post('/submit', authMiddleware, studentMiddleware, uploadFields, async (r
 
     const gradePoints = gradeToPoints(kcseGrade);
 
-    let payment = null;
-    if (Number.isFinite(paymentId) && paymentId > 0) {
-      const paymentResult = await client.query('SELECT id, status, application_id, provider_payload FROM payments WHERE id = $1', [paymentId]);
-      payment = paymentResult.rows[0];
-    }
-
-    if (!payment) {
-      const recentPaymentResult = await client.query(
-        `SELECT id, status, application_id, provider_payload
-         FROM payments
-         WHERE application_id IS NULL OR application_id = $1
-         ORDER BY created_at DESC
-         LIMIT 1`,
-        [null]
-      );
-      payment = recentPaymentResult.rows[0];
-    }
-
-    if (!payment) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'Payment record not found.' });
-    }
-
-    const paymentIsSuccessful = isPaymentSuccessful(payment);
-    if (!paymentIsSuccessful) {
+    const paymentResult = await client.query('SELECT id, status, application_id, provider_payload FROM payments WHERE id = $1', [paymentId]);
+    const payment = paymentResult.rows[0];
+    if (!payment || !isPaymentSuccessful(payment)) {
       await client.query('ROLLBACK');
       return res.status(400).json({ error: 'Payment must be completed before your application can be submitted.' });
     }

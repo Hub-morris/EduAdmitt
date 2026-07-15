@@ -144,32 +144,7 @@
 .stat-card.blue { border-left: 4px solid var(--primary); }
 .stat-card.orange { border-left: 4px solid var(--warning); }
 .stat-card.green { border-left: 4px solid var(--success); }
-.stat-card.red { border-left: 4px solid var(--danger); }
 .stat-card.purple { border-left: 4px solid #8B5CF6; }
-
-.chart-card {
-  padding: 1.5rem;
-  min-height: 320px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.chart-card h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.dashboard-summary .stat-card {
-  min-height: 150px;
-}
-
-@media (max-width: 1024px) {
-  .chart-card {
-    min-height: 260px;
-  }
-}
 
 .admin-table {
   width: 100%;

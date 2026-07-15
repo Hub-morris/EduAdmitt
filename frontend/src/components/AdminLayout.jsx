@@ -9,7 +9,6 @@ import {
   faClipboardList,
   faCreditCard,
   faUsers,
-  faChartPie,
   faBars,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../context/AuthContext';
@@ -19,7 +18,6 @@ const navItems = [
   { to: '/admin', label: 'Dashboard', icon: faTachometerAlt, exact: true },
   { to: '/admin/programmes', label: 'Programmes', icon: faBookOpen },
   { to: '/admin/departments', label: 'Departments', icon: faSitemap },
-  { to: '/admin/reports', label: 'Reports', icon: faChartPie },
   { to: '/admin/users', label: 'Manage Users', icon: faUsers },
   { to: '/admin/applications', label: 'Applications', icon: faClipboardList },
   { to: '/admin#payments', label: 'Payments', icon: faCreditCard, anchor: 'payments' },
