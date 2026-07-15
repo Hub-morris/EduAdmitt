@@ -1,25 +1,84 @@
 import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import pool from '../config/db.js';
 import { authMiddleware, adminMiddleware } from '../middleware/auth.js';
 import { upload } from '../middleware/upload.js';
 import { generateAdmissionNumber } from '../utils/helpers.js';
 import { generateQualificationReasoning } from '../services/qualificationAi.js';
 import PDFDocument from 'pdfkit';
+import fs from 'fs';
+import path from 'path';
 
 const router = express.Router();
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 router.use(authMiddleware, adminMiddleware);
+
+export function getAdminApplicationDetailQuery() {
+  return `
+    SELECT
+      a.id,
+      a.student_id,
+      a.programme_id,
+      a.status,
+      a.verification_status,
+      a.qualification_status,
+      a.admission_status,
+      a.submitted_at,
+      a.verified_at,
+      a.qualified_at,
+      a.admitted_at,
+      a.rejection_reason,
+      a.qualification_reasoning,
+      a.created_at,
+      a.updated_at,
+      a.needs_amendment,
+      a.amendment_count,
+      a.last_amendment_at,
+      a.payment_rejection_reason,
+      s.full_name,
+      s.email,
+      s.phone,
+      s.address,
+      s.county,
+      s.emergency_contact_name,
+      s.emergency_contact_phone,
+      s.date_of_birth,
+      s.gender,
+      s.id_number,
+      s.kcse_index,
+      s.kcse_grade,
+      s.previous_school,
+      p.name as programme_name,
+      p.min_qualification,
+      p.min_grade_points,
+      p.fees,
+      p.duration,
+      p.intake as programme_intake,
+      latest_payment.status as payment_status,
+      latest_payment.reference as payment_reference,
+      latest_payment.amount as payment_amount
+    FROM applications a
+    JOIN students s ON s.id = a.student_id
+    JOIN programmes p ON p.id = a.programme_id
+    LEFT JOIN LATERAL (
+      SELECT status, reference, amount
+      FROM payments
+      WHERE application_id = a.id
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) latest_payment ON TRUE
+    WHERE a.id = $1
+  `;
+}
 
 router.get('/dashboard', async (_req, res) => {
   try {
     const stats = await pool.query(`
       SELECT
         COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status = 'submitted') as pending,
         COUNT(*) FILTER (WHERE verification_status = 'pending') as under_verification,
         COUNT(*) FILTER (WHERE qualification_status = 'qualified') as qualified,
+        COUNT(*) FILTER (WHERE status = 'rejected') as rejected,
         COUNT(*) FILTER (WHERE admission_status = 'admitted') as admitted
       FROM applications WHERE status != 'draft'
     `);
@@ -61,79 +120,34 @@ router.get('/dashboard', async (_req, res) => {
 router.get('/applications', async (req, res) => {
   try {
     const { status, verificationStatus } = req.query;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
-
-    // Build base where clause
-    let where = `WHERE a.status != 'draft'`;
-    const params = [];
-    let idx = 1;
-    if (status) {
-      where += ` AND a.status = $${idx}`;
-      params.push(status);
-      idx++;
-    }
-    if (verificationStatus) {
-      where += ` AND a.verification_status = $${idx}`;
-      params.push(verificationStatus);
-      idx++;
-    }
-
-    // Count total matching
-    const countQuery = `SELECT COUNT(*) as total FROM applications a ${where}`;
-    const countResult = await pool.query(countQuery, params);
-    const total = parseInt(countResult.rows[0].total || 0);
-
-    // Fetch paginated rows
-    const query = `
+    let query = `
       SELECT a.*, s.full_name, s.email, s.kcse_grade, p.name as programme_name
       FROM applications a
       JOIN students s ON s.id = a.student_id
       JOIN programmes p ON p.id = a.programme_id
-      ${where}
-      ORDER BY a.submitted_at DESC
-      LIMIT $${idx} OFFSET $${idx + 1}
+      WHERE a.status != 'draft'
     `;
-    const queryParams = params.concat([limit, offset]);
-    const result = await pool.query(query, queryParams);
-
-    res.json({
-      data: result.rows,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.max(1, Math.ceil(total / limit))
-      }
-    });
+    const params = [];
+    let idx = 1;
+    if (status) {
+      query += ` AND a.status = $${idx++}`;
+      params.push(status);
+    }
+    if (verificationStatus) {
+      query += ` AND a.verification_status = $${idx++}`;
+      params.push(verificationStatus);
+    }
+    query += ' ORDER BY a.submitted_at DESC';
+    const result = await pool.query(query, params);
+    res.json(result.rows);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: 'Failed to fetch applications' });
   }
 });
 
 router.get('/applications/:id', async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT a.*, s.*, p.name as programme_name, p.min_qualification, p.min_grade_points,
-              p.fees, p.duration, p.intake as programme_intake,
-              latest_payment.status as payment_status,
-              latest_payment.reference as payment_reference,
-              latest_payment.amount as payment_amount
-       FROM applications a
-       JOIN students s ON s.id = a.student_id
-       JOIN programmes p ON p.id = a.programme_id
-       LEFT JOIN LATERAL (
-         SELECT status, reference, amount
-         FROM payments
-         WHERE application_id = a.id
-         ORDER BY created_at DESC
-         LIMIT 1
-       ) latest_payment ON TRUE
-       WHERE a.id = $1`,
-      [req.params.id]
-    );
+    const result = await pool.query(getAdminApplicationDetailQuery(), [req.params.id]);
     if (!result.rows.length) return res.status(404).json({ error: 'Application not found' });
     const app = result.rows[0];
     const docs = await pool.query(
@@ -219,15 +233,8 @@ router.patch('/applications/:id/verify', async (req, res) => {
   }
 });
 
-router.get('/payments', async (req, res) => {
+router.get('/payments', async (_req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
-
-    const countResult = await pool.query('SELECT COUNT(*) as total FROM payments');
-    const total = parseInt(countResult.rows[0].total);
-
     const result = await pool.query(`
       SELECT p.id, p.reference, p.amount, p.status, p.provider, p.created_at,
              a.id as application_id, a.status as application_status,
@@ -236,20 +243,39 @@ router.get('/payments', async (req, res) => {
       LEFT JOIN applications a ON a.id = p.application_id
       LEFT JOIN students s ON s.id = a.student_id
       ORDER BY p.created_at DESC
-      LIMIT $1 OFFSET $2
-    `, [limit, offset]);
-
-    res.json({
-      data: result.rows,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    });
+    `);
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch payments' });
+  }
+});
+
+// Serve uploaded documents by id (stream file from uploads directory)
+router.get('/documents/:id', async (req, res) => {
+  try {
+    const docRes = await pool.query('SELECT * FROM application_documents WHERE id = $1', [req.params.id]);
+    if (!docRes.rows.length) return res.status(404).json({ error: 'Document not found' });
+    const doc = docRes.rows[0];
+
+    const uploadsDir = path.join(__dirname, '../../uploads');
+    const filePath = path.join(uploadsDir, doc.file_path);
+
+    fs.access(filePath, fs.constants.R_OK, (err) => {
+      if (err) return res.status(404).json({ error: 'File not found' });
+
+      const ext = path.extname(filePath).toLowerCase();
+      const inlineTypes = ['.pdf', '.jpg', '.jpeg', '.png', '.gif'];
+      if (inlineTypes.includes(ext)) {
+        res.setHeader('Content-Disposition', `inline; filename="${doc.original_name}"`);
+      } else {
+        res.setHeader('Content-Disposition', `attachment; filename="${doc.original_name}"`);
+      }
+
+      res.sendFile(filePath);
+    });
+  } catch (err) {
+    console.error('Error serving document:', err);
+    res.status(500).json({ error: 'Failed to fetch document' });
   }
 });
 
@@ -294,33 +320,8 @@ router.patch('/payments/:id/reject', async (req, res) => {
   }
 });
 
-router.delete('/payments/:id', async (req, res) => {
+router.get('/users', async (_req, res) => {
   try {
-    const payRes = await pool.query('SELECT * FROM payments WHERE id = $1', [req.params.id]);
-    if (!payRes.rows.length) return res.status(404).json({ error: 'Payment not found' });
-
-    const pay = payRes.rows[0];
-    if (pay.status === 'completed') {
-      return res.status(400).json({ error: 'Cannot delete completed payments' });
-    }
-
-    await pool.query('DELETE FROM payments WHERE id = $1', [req.params.id]);
-    res.json({ message: 'Payment deleted successfully' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to delete payment' });
-  }
-});
-
-router.get('/users', async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
-
-    const countResult = await pool.query('SELECT COUNT(*) as total FROM users');
-    const total = parseInt(countResult.rows[0].total);
-
     const result = await pool.query(`
       SELECT id, email, full_name, role, created_at, last_login_at,
              CASE
@@ -330,63 +331,22 @@ router.get('/users', async (req, res) => {
              END as status
       FROM users
       ORDER BY created_at DESC
-      LIMIT $1 OFFSET $2
-    `, [limit, offset]);
-
-    res.json({
-      data: result.rows,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    });
+    `);
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
 
-router.delete('/users/:id', async (req, res) => {
+router.get('/departments', async (_req, res) => {
   try {
-    const userRes = await pool.query('SELECT id FROM users WHERE id = $1', [req.params.id]);
-    if (!userRes.rows.length) return res.status(404).json({ error: 'User not found' });
-
-    await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
-    res.json({ message: 'User deleted successfully' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to delete user' });
-  }
-});
-
-router.get('/departments', async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
-
-    const countResult = await pool.query('SELECT COUNT(*) as total FROM departments');
-    const total = parseInt(countResult.rows[0].total);
-
     const result = await pool.query(
       `SELECT d.*, f.name as faculty_name
        FROM departments d
        LEFT JOIN faculties f ON f.id = d.faculty_id
-       ORDER BY d.name
-       LIMIT $1 OFFSET $2`,
-      [limit, offset]
+       ORDER BY d.name`
     );
-
-    res.json({
-      data: result.rows,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    });
+    res.json(result.rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch departments' });
@@ -443,23 +403,7 @@ router.delete('/departments/:id', async (req, res) => {
 
 router.get('/programmes', async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
     const { departmentId } = req.query;
-
-    let countQuery = `SELECT COUNT(*) as total FROM programmes p
-                     WHERE p.is_active = true`;
-    let countParams = [];
-
-    if (departmentId) {
-      countQuery += ' AND p.department_id = $1';
-      countParams.push(departmentId);
-    }
-
-    const countResult = await pool.query(countQuery, countParams);
-    const total = parseInt(countResult.rows[0].total);
-
     let query = `
       SELECT p.*, d.name as department_name, f.name as faculty_name
       FROM programmes p
@@ -468,26 +412,13 @@ router.get('/programmes', async (req, res) => {
       WHERE p.is_active = true
     `;
     const params = [];
-
     if (departmentId) {
       query += ' AND d.id = $1';
       params.push(departmentId);
     }
-
-    query += ' ORDER BY p.name LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
-    params.push(limit, offset);
-
+    query += ' ORDER BY p.name';
     const result = await pool.query(query, params);
-
-    res.json({
-      data: result.rows,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    });
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch programmes' });
   }
@@ -701,29 +632,6 @@ router.delete('/programmes/:id', async (req, res) => {
     res.json({ message: 'Programme deactivated' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete programme' });
-  }
-});
-
-// Document viewing endpoint
-router.get('/documents/:id', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM application_documents WHERE id = $1', [req.params.id]);
-    if (!result.rows.length) return res.status(404).json({ error: 'Document not found' });
-    
-    const doc = result.rows[0];
-    const filePath = path.join(__dirname, '../../uploads', doc.file_path);
-    
-    res.download(filePath, doc.original_name, (err) => {
-      if (err) {
-        console.error('Download error:', err);
-        if (!res.headersSent) {
-          res.status(500).json({ error: 'Failed to download document' });
-        }
-      }
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to retrieve document' });
   }
 });
 

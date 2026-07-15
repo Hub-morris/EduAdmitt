@@ -179,8 +179,13 @@ export default function ApplicationPage() {
     Object.entries(files).forEach(([k, v]) => { if (v) fd.append(k, v); });
 
     try {
-      fd.append('paymentId', paymentId || '');
-      await api.post('/applications/submit', fd);
+      if (!paymentId) {
+        setError('Please complete the application fee payment before submitting your application.');
+        setSubmitting(false);
+        return;
+      }
+      fd.append('paymentId', String(paymentId));
+      const response = await api.post('/applications/submit', fd);
       setSuccess(true);
       setTimeout(() => navigate('/status'), 2000);
     } catch (err) {

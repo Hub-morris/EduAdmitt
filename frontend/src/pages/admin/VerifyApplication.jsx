@@ -24,6 +24,17 @@ export default function VerifyApplication() {
     });
   }, [id]);
 
+  const handleViewDocument = async (docId) => {
+    try {
+      const response = await api.get(`/admin/documents/${docId}`, { responseType: 'blob' });
+      const blobUrl = window.URL.createObjectURL(response.data);
+      window.open(blobUrl, '_blank', 'noopener,noreferrer');
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10000);
+    } catch (err) {
+      setMessage(err.response?.data?.error || 'Failed to load document');
+    }
+  };
+
   const handleVerify = async (status) => {
     setProcessing(true);
     try {
@@ -94,7 +105,7 @@ export default function VerifyApplication() {
                     <span className="doc-name">{doc.original_name}</span>
                   </div>
                   <div className="doc-actions">
-                    <a href={`/api/admin/documents/${doc.id}`} target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary">View</a>
+                    <button type="button" onClick={() => handleViewDocument(doc.id)} className="btn btn-sm btn-secondary">View</button>
                     <span className={`badge badge-${doc.verification_status === 'verified' ? 'success' : 'warning'}`}>{doc.verification_status}</span>
                   </div>
                 </div>

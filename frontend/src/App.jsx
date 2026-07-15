@@ -16,6 +16,7 @@ const AboutPage = lazy(() => import('./pages/student/AboutPage'));
 
 const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
 const VerifyApplication = lazy(() => import('./pages/admin/VerifyApplication'));
 const QualificationCheck = lazy(() => import('./pages/admin/QualificationCheck'));
 const AdmissionOffer = lazy(() => import('./pages/admin/AdmissionOffer'));
@@ -53,6 +54,7 @@ function AppRoutes() {
         <Route path="/admin/admit/:id" element={<ProtectedRoute role="admin"><AdmissionOffer /></ProtectedRoute>} />
         <Route path="/admin/programmes" element={<ProtectedRoute role="admin"><ManageProgrammes /></ProtectedRoute>} />
         <Route path="/admin/departments" element={<ProtectedRoute role="admin"><ManageDepartments /></ProtectedRoute>} />
+        <Route path="/admin/reports" element={<ProtectedRoute role="admin"><AdminReports /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute role="admin"><ManageUsers /></ProtectedRoute>} />
         <Route path="/admin/applications" element={<ProtectedRoute role="admin"><ManageApplications /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
