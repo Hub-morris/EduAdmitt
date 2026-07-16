@@ -10,6 +10,9 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ fullName: '', email: '', password: '', confirm: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [suggestedPassword, setSuggestedPassword] = useState('');
+  const [showSuggestedPassword, setShowSuggestedPassword] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
@@ -33,6 +36,17 @@ export default function RegisterPage() {
     }
   };
 
+  const generateStrongPassword = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+';
+    let pw = '';
+    for (let i = 0; i < 12; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+    setSuggestedPassword(pw);
+    setShowSuggestedPassword(true);
+    setPasswordVisible(false);
+    setForm((s) => ({ ...s, password: pw, confirm: pw }));
+    navigator.clipboard?.writeText(pw).catch(() => {});
+  };
+
   return (
     <div className="page-layout">
       <Navbar />
@@ -52,7 +66,29 @@ export default function RegisterPage() {
             </div>
             <div className="form-group">
               <label className="form-label">Password</label>
-              <input name="password" type="password" className="form-input" value={form.password} onChange={handleChange} required minLength={6} />
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <input
+                  name="password"
+                  type={passwordVisible ? 'text' : 'password'}
+                  className="form-input"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                  minLength={6}
+                />
+                <button type="button" className="btn btn-secondary" onClick={generateStrongPassword}>Suggest</button>
+              </div>
+              {suggestedPassword && showSuggestedPassword && (
+                <div className="suggested-password-box" style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <span style={{ fontFamily: 'monospace', background: '#f3f4f6', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', flex: '1 1 auto' }}>
+                    {passwordVisible ? suggestedPassword : '••••••••••••'}
+                  </span>
+                  <button type="button" className="btn btn-secondary" onClick={() => setPasswordVisible((v) => !v)}>
+                    {passwordVisible ? 'Hide' : 'View'}
+                  </button>
+                  <button type="button" className="btn btn-secondary" onClick={generateStrongPassword}>New Suggestion</button>
+                </div>
+              )}
             </div>
             <div className="form-group">
               <label className="form-label">Confirm Password</label>

@@ -21,6 +21,7 @@ const navItems = [
   { to: '/admin/users', label: 'Manage Users', icon: faUsers },
   { to: '/admin/applications', label: 'Applications', icon: faClipboardList },
   { to: '/admin#payments', label: 'Payments', icon: faCreditCard, anchor: 'payments' },
+  { to: '/admin/reports', label: 'Reports', icon: faUniversity },
 ];
 
 export default function AdminLayout({ children }) {

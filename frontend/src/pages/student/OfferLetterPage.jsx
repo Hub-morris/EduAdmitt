@@ -163,7 +163,7 @@ export default function OfferLetterPage() {
           <div className="letter-footer">
             <p>
               Please complete your acceptance and registration steps before the reporting date. For questions about enrollment,
-              contact the Office of Admissions at <strong>admissions@eduadmit.edu</strong> or call <strong>+1 (800) 555-0100</strong>.
+              contact the Office of Admissions at <strong>admissions@eduadmit.edu</strong> or call <strong>0789761234</strong>.
             </p>
             <p className="letter-note">This offer is subject to the terms and conditions of EduAdmit University.</p>
           </div>

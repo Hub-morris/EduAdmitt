@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import PageLoader from './components/PageLoader';
+import ChangePasswordModal from './components/ChangePasswordModal';
 
 const LandingPage = lazy(() => import('./pages/student/LandingPage'));
 const ProgrammesPage = lazy(() => import('./pages/student/ProgrammesPage'));
@@ -23,6 +24,7 @@ const ManageProgrammes = lazy(() => import('./pages/admin/ManageProgrammes'));
 const ManageDepartments = lazy(() => import('./pages/admin/ManageDepartments'));
 const ManageUsers = lazy(() => import('./pages/admin/ManageUsers'));
 const ManageApplications = lazy(() => import('./pages/admin/ManageApplications'));
+const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
 
 function ProtectedRoute({ children, role }) {
   const { user, loading } = useAuth();
@@ -55,6 +57,7 @@ function AppRoutes() {
         <Route path="/admin/departments" element={<ProtectedRoute role="admin"><ManageDepartments /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute role="admin"><ManageUsers /></ProtectedRoute>} />
         <Route path="/admin/applications" element={<ProtectedRoute role="admin"><ManageApplications /></ProtectedRoute>} />
+        <Route path="/admin/reports" element={<ProtectedRoute role="admin"><AdminReports /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
@@ -66,7 +69,22 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppRoutes />
+        <AuthPasswordPrompt />
       </AuthProvider>
     </BrowserRouter>
+  );
+}
+
+function AuthPasswordPrompt() {
+  const { user, showChangePasswordPrompt, setShowChangePasswordPrompt, changePassword } = useAuth();
+  const open = Boolean(user && showChangePasswordPrompt);
+
+  return (
+    <ChangePasswordModal
+      open={open}
+      onClose={() => setShowChangePasswordPrompt(false)}
+      requireCurrent={true}
+      onSuccess={() => setShowChangePasswordPrompt(false)}
+    />
   );
 }

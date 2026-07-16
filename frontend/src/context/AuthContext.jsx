@@ -6,6 +6,7 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showChangePasswordPrompt, setShowChangePasswordPrompt] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -23,6 +24,8 @@ export function AuthProvider({ children }) {
     const { data } = await api.post('/auth/login', { email, password });
     localStorage.setItem('token', data.token);
     setUser(data.user);
+    // prompt user to consider changing password after login
+    setShowChangePasswordPrompt(true);
     return data.user;
   };
 
@@ -30,7 +33,14 @@ export function AuthProvider({ children }) {
     const { data } = await api.post('/auth/register', { email, password, fullName });
     localStorage.setItem('token', data.token);
     setUser(data.user);
+    // after registering, strongly encourage password change
+    setShowChangePasswordPrompt(true);
     return data.user;
+  };
+
+  const changePassword = async ({ currentPassword, newPassword }) => {
+    const { data } = await api.post('/auth/change-password', { currentPassword, newPassword });
+    return data;
   };
 
   const logout = () => {
@@ -39,7 +49,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser, changePassword, showChangePasswordPrompt, setShowChangePasswordPrompt }}>
       {children}
     </AuthContext.Provider>
   );

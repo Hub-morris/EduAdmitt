@@ -7,12 +7,23 @@ import { authMiddleware } from '../middleware/auth.js';
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'eduadmit-dev-secret';
 
+function validatePassword(pw) {
+  if (!pw || pw.length < 8) return 'Password must be at least 8 characters long';
+  if (!/[a-z]/.test(pw)) return 'Password must include a lowercase letter';
+  if (!/[A-Z]/.test(pw)) return 'Password must include an uppercase letter';
+  if (!/[0-9]/.test(pw)) return 'Password must include a number';
+  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pw)) return 'Password must include a special character';
+  return null;
+}
+
 router.post('/register', async (req, res) => {
   try {
     const { email, password, fullName } = req.body;
     if (!email || !password || !fullName) {
       return res.status(400).json({ error: 'Email, password, and full name are required' });
     }
+    const pwErr = validatePassword(password);
+    if (pwErr) return res.status(400).json({ error: pwErr });
     const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
     if (existing.rows.length) {
       return res.status(400).json({ error: 'Email already registered' });
@@ -71,3 +82,30 @@ router.get('/me', authMiddleware, async (req, res) => {
 });
 
 export default router;
+
+// Change password (authenticated)
+router.post('/change-password', authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!newPassword) return res.status(400).json({ error: 'New password is required' });
+
+    const pwErr = validatePassword(newPassword);
+    if (pwErr) return res.status(400).json({ error: pwErr });
+
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+    if (!result.rows.length) return res.status(404).json({ error: 'User not found' });
+    const user = result.rows[0];
+
+    if (currentPassword) {
+      const valid = await bcrypt.compare(currentPassword, user.password_hash);
+      if (!valid) return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, user.id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+});

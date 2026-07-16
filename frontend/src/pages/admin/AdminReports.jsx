@@ -63,6 +63,62 @@ export default function AdminReports() {
         <p className="page-subtitle">Visual overview of admissions performance.</p>
       </FadeIn>
 
+      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+        <button
+          className="btn btn-secondary"
+          onClick={() => {
+            // download JSON
+            const blob = new Blob([JSON.stringify(data || {}, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'eduadmit-reports.json';
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+        >
+          Download JSON
+        </button>
+        <button
+          className="btn btn-secondary"
+          onClick={() => {
+            // build simple CSV of timeline
+            const rows = [['date','applications']];
+            (data?.timeline || []).forEach((r) => rows.push([r.date, r.count]));
+            const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'eduadmit-timeline.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+        >
+          Download CSV
+        </button>
+        <button
+          className="btn btn-secondary"
+          onClick={async () => {
+            try {
+              const res = await api.get('/admin/reports/pdf', { responseType: 'blob' });
+              const blob = new Blob([res.data], { type: 'application/pdf' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'eduadmit-reports.pdf';
+              a.click();
+              URL.revokeObjectURL(url);
+            } catch (err) {
+              console.error('PDF download failed', err);
+              window.alert('Failed to download PDF report');
+            }
+          }}
+        >
+          Download PDF
+        </button>
+      </div>
+
       {loading ? (
         <div className="page-loader"><div className="spinner" /></div>
       ) : error ? (

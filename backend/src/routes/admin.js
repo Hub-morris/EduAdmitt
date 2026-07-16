@@ -58,6 +58,89 @@ router.get('/dashboard', async (_req, res) => {
   }
 });
 
+// PDF export for reports
+router.get('/reports/pdf', async (req, res) => {
+  try {
+    const statsQ = await pool.query(`
+      SELECT
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE verification_status = 'pending') as under_verification,
+        COUNT(*) FILTER (WHERE qualification_status = 'qualified') as qualified,
+        COUNT(*) FILTER (WHERE admission_status = 'admitted') as admitted
+      FROM applications WHERE status != 'draft'
+    `);
+
+    const timelineQ = await pool.query(`
+      SELECT DATE(submitted_at) as date, COUNT(*) as count
+      FROM applications
+      WHERE submitted_at IS NOT NULL AND submitted_at >= NOW() - INTERVAL '30 days'
+      GROUP BY DATE(submitted_at)
+      ORDER BY date
+    `);
+
+    const paymentStatsQ = await pool.query(`
+      SELECT
+        COUNT(*) as total_payments,
+        COUNT(*) FILTER (WHERE status = 'completed') as completed,
+        COALESCE(SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END), 0) as total_collected,
+        COALESCE(SUM(amount), 0) as total_amount
+      FROM payments
+    `);
+
+    const stats = statsQ.rows[0] || {};
+    const timeline = timelineQ.rows || [];
+    const paymentStats = paymentStatsQ.rows[0] || {};
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="eduadmit-reports.pdf"');
+
+    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+    doc.pipe(res);
+
+    doc.fontSize(18).text('EduAdmit - Reports', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(10).text(`Generated: ${new Date().toLocaleString('en-KE')}`, { align: 'center' });
+    doc.moveDown(1);
+
+    doc.fontSize(12).text('Summary', { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(10).text(`Total Applications: ${stats.total || 0}`);
+    doc.text(`Under Verification: ${stats.under_verification || 0}`);
+    doc.text(`Qualified: ${stats.qualified || 0}`);
+    doc.text(`Admitted: ${stats.admitted || 0}`);
+    doc.moveDown(0.75);
+
+    doc.fontSize(12).text('Payment Summary', { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(10).text(`Total Payments: ${paymentStats.total_payments || 0}`);
+    doc.text(`Completed: ${paymentStats.completed || 0}`);
+    doc.text(`Total Collected: KES ${Number(paymentStats.total_collected || 0).toLocaleString()}`);
+    doc.moveDown(0.75);
+
+    doc.fontSize(12).text('Applications Over Time (last 30 days)', { underline: true });
+    doc.moveDown(0.5);
+
+    // Table header
+    const tableTop = doc.y;
+    doc.fontSize(10).text('Date', 60, tableTop);
+    doc.text('Applications', 300, tableTop);
+    doc.moveDown(0.5);
+
+    timeline.forEach((row) => {
+      const y = doc.y;
+      const d = new Date(row.date).toLocaleDateString('en-KE');
+      doc.text(d, 60, y);
+      doc.text(String(row.count), 300, y);
+      doc.moveDown(0.25);
+    });
+
+    doc.end();
+  } catch (err) {
+    console.error('PDF export error', err);
+    res.status(500).json({ error: 'Failed to generate PDF' });
+  }
+});
+
 router.get('/applications', async (req, res) => {
   try {
     const { status, verificationStatus } = req.query;

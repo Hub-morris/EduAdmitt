@@ -115,6 +115,9 @@ export default function AdminDashboard() {
       <FadeIn>
         <h1 className="page-title">Dashboard</h1>
         <p className="page-subtitle">Overview of admission applications</p>
+        <div style={{ marginTop: '0.75rem' }}>
+          <Link to="/admin/reports" className="btn btn-secondary">Open Reports</Link>
+        </div>
       </FadeIn>
 
       <div className="grid-4 dashboard-summary" style={{ marginBottom: '2rem' }}>
