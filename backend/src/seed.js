@@ -56,17 +56,19 @@ const defaultDepartments = [
 export async function seedData() {
   await initDb();
 
-  const adminCount = await pool.query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
-  if (parseInt(adminCount.rows[0].count) === 0) {
-    const adminHash = await bcrypt.hash('admin123', 10);
+  const adminEmail = 'eduadmitt2@gmail.com';
+  const adminPassword = 'admin123';
+  const existingAdmin = await pool.query('SELECT id FROM users WHERE email = $1', [adminEmail]);
+
+  if (existingAdmin.rows.length === 0) {
+    const adminHash = await bcrypt.hash(adminPassword, 10);
     await pool.query(
-      'INSERT INTO users (email, password_hash, role, full_name) VALUES ($1, $2, $3, $4)',
-      ['admin@eduadmit.ac.ke', adminHash, 'admin', 'System Administrator']
+      'INSERT INTO users (email, password_hash, role, full_name, is_email_verified, last_login_at) VALUES ($1, $2, $3, $4, TRUE, NOW())',
+      [adminEmail, adminHash, 'admin', 'System Administrator']
     );
-    console.log('Admin user created successfully!');
-    console.log('Admin login: admin@eduadmit.ac.ke / admin123');
+    console.log(`Admin user created successfully! Admin login: ${adminEmail} / ${adminPassword}`);
   } else {
-    console.log('Admin user already exists. Skipping admin creation.');
+    console.log(`Admin user ${adminEmail} already exists. Skipping admin creation.`);
   }
 
   const facultyResult = await pool.query('SELECT id FROM faculties WHERE name = $1', [defaultFacultyName]);

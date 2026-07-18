@@ -56,8 +56,40 @@ export async function initDb() {
         password_hash VARCHAR(255) NOT NULL,
         role VARCHAR(20) NOT NULL DEFAULT 'student',
         full_name VARCHAR(255),
+        is_email_verified BOOLEAN DEFAULT false,
+        email_verification_token VARCHAR(255),
+        email_verification_expires TIMESTAMP,
         created_at TIMESTAMP DEFAULT NOW(),
         last_login_at TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS user_otps (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        code VARCHAR(10) NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        attempts INTEGER DEFAULT 0,
+        used BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS devices (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        fingerprint VARCHAR(500) NOT NULL,
+        first_seen TIMESTAMP DEFAULT NOW(),
+        last_seen TIMESTAMP DEFAULT NOW(),
+        UNIQUE(user_id, fingerprint)
+      );
+
+      CREATE TABLE IF NOT EXISTS webauthn_credentials (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        credential_id TEXT NOT NULL,
+        credential_public_key TEXT NOT NULL,
+        counter BIGINT NOT NULL,
+        transports JSONB,
+        created_at TIMESTAMP DEFAULT NOW()
       );
 
       CREATE TABLE IF NOT EXISTS students (
@@ -173,6 +205,9 @@ export async function initDb() {
       ALTER TABLE students ADD COLUMN IF NOT EXISTS emergency_contact_phone VARCHAR(50);
       ALTER TABLE applications ADD COLUMN IF NOT EXISTS qualification_reasoning TEXT;
       ALTER TABLE applications ADD COLUMN IF NOT EXISTS amendment_count INTEGER DEFAULT 0;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS is_email_verified BOOLEAN DEFAULT false;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255);
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_expires TIMESTAMP;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP;
       ALTER TABLE applications ADD COLUMN IF NOT EXISTS last_amendment_at TIMESTAMP;
       ALTER TABLE applications ADD COLUMN IF NOT EXISTS needs_amendment BOOLEAN DEFAULT false;

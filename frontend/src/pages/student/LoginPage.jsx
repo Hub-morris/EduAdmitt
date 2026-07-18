@@ -21,7 +21,12 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const user = await login(email, password);
+      const result = await login(email, password);
+      if (result?.otpId) {
+        navigate('/verify-otp', { state: { otpId: result.otpId, fingerprint: result.fingerprint, from } });
+        return;
+      }
+      const user = result.user;
       navigate(user.role === 'admin' ? '/admin' : from);
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');

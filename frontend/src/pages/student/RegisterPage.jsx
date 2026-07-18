@@ -27,8 +27,12 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      await register(form.email, form.password, form.fullName);
-      navigate('/programmes');
+      const data = await register(form.email, form.password, form.fullName);
+      if (data?.message) {
+        navigate('/login');
+      } else {
+        navigate('/programmes');
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed');
     } finally {

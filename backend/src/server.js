@@ -3,9 +3,12 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { initDb } from './config/db.js';
+import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
+import pool, { initDb } from './config/db.js';
 import { seedData } from './seed.js';
 import authRoutes from './routes/auth.js';
+import webauthnRoutes from './routes/webauthn.js';
 import programmeRoutes from './routes/programmes.js';
 import applicationRoutes from './routes/applications.js';
 import adminRoutes from './routes/admin.js';
@@ -18,12 +21,29 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({ origin: process.env.ORIGIN || 'http://localhost:3000', credentials: true }));
 app.use(express.json());
+
+const PgSession = connectPgSimple(session);
+app.use(
+  session({
+    store: new PgSession({ pool, tableName: 'session' }),
+    secret: process.env.SESSION_SECRET || 'eduadmit-session-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      httpOnly: true,
+    },
+  })
+);
+
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/webauthn', webauthnRoutes);
 app.use('/api', programmeRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/admin', adminRoutes);

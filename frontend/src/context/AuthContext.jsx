@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../api/client';
+import { getDeviceFingerprint } from '../utils/fingerprint';
 
 const AuthContext = createContext(null);
 
@@ -20,22 +21,31 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem('token', data.token);
-    setUser(data.user);
-    // prompt user to consider changing password after login
-    setShowChangePasswordPrompt(true);
-    return data.user;
+  const login = async (email, password, fingerprint) => {
+    const fp = fingerprint || await getDeviceFingerprint();
+    const { data } = await api.post('/auth/login', { email, password, fingerprint: fp });
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+      setUser(data.user);
+      setShowChangePasswordPrompt(true);
+      return { user: data.user };
+    }
+    return { ...data, fingerprint: fp };
+  };
+
+  const verifyOtp = async ({ otpId, code, fingerprint }) => {
+    const { data } = await api.post('/auth/verify-otp', { otpId, code, fingerprint });
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+      setUser(data.user);
+      setShowChangePasswordPrompt(true);
+    }
+    return data;
   };
 
   const register = async (email, password, fullName) => {
     const { data } = await api.post('/auth/register', { email, password, fullName });
-    localStorage.setItem('token', data.token);
-    setUser(data.user);
-    // after registering, strongly encourage password change
-    setShowChangePasswordPrompt(true);
-    return data.user;
+    return data;
   };
 
   const changePassword = async ({ currentPassword, newPassword }) => {
@@ -49,7 +59,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser, changePassword, showChangePasswordPrompt, setShowChangePasswordPrompt }}>
+    <AuthContext.Provider value={{ user, loading, login, verifyOtp, register, logout, setUser, changePassword, showChangePasswordPrompt, setShowChangePasswordPrompt }}>
       {children}
     </AuthContext.Provider>
   );
