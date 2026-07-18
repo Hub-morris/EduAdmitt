@@ -11,3 +11,8 @@ primary_region = "sin"
 
 [env]
   PORT = "5000"
+  ORIGIN = "https://your-production-domain.com"
+  # SMTP credentials and sensitive secrets should be set as Fly secrets.
+  # Example commands:
+  # fly secrets set SMTP_HOST=smtp.gmail.com SMTP_PORT=587 SMTP_USER=your-email@gmail.com SMTP_PASS=your-app-password SMTP_SECURE=false
+  # fly secrets set JWT_SECRET=your_jwt_secret SESSION_SECRET=your_session_secret

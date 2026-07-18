@@ -87,10 +87,61 @@ Copy `backend/.env.example` to `backend/.env`:
 PORT=5000
 DATABASE_URL=postgresql://eduadmit:eduadmit123@localhost:5432/eduadmit
 JWT_SECRET=your_secret_key
-UPLOAD_DIR=uploads
-OPENAI_API_KEY=          # Optional — enables GPT-powered qualification reasoning
+SESSION_SECRET=eduadmit_session_secret_change_in_production
+RP_NAME=eduAdmit
+RP_ID=localhost
+ORIGIN=http://localhost:4175
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_SECURE=false
+OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4o-mini
 ```
+
+For live deployment, set `ORIGIN` to your public frontend URL, for example:
+
+```
+ORIGIN=https://eduadmit.example.com
+```
+
+Also configure a real SMTP provider for email delivery, including:
+
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USER`
+- `SMTP_PASS`
+- `SMTP_SECURE`
+
+The app uses these values to send verification emails and OTP codes.
+
+### Fly deployment secrets
+
+On Fly, keep sensitive values as secrets rather than putting them in `fly.toml`.
+
+Example commands:
+
+```bash
+cd backend
+fly secrets set \
+  ORIGIN=https://eduadmit.example.com \
+  SMTP_HOST=smtp.gmail.com \
+  SMTP_PORT=587 \
+  SMTP_USER=your-email@gmail.com \
+  SMTP_PASS=your-app-password \
+  SMTP_SECURE=false \
+  JWT_SECRET=your_jwt_secret \
+  SESSION_SECRET=your_session_secret
+```
+
+Then deploy with:
+
+```bash
+fly deploy
+```
+
+If you are using a different host, set the same env vars in the host provider's secret manager instead.
 
 ## E2E Test
 
