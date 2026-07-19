@@ -20,7 +20,7 @@ export default function OtpVerifyPage() {
     setError('');
     setLoading(true);
     try {
-      const data = await verifyOtp({ otpId: state.otpId, code, fingerprint: state.fingerprint });
+      const data = await verifyOtp({ otpId: state.otpId, code, fingerprint: state.fingerprint || 'unknown' });
       if (data?.requiresWebAuthn) {
         navigate('/webauthn', { state: { from: state.from } });
         return;
@@ -28,7 +28,8 @@ export default function OtpVerifyPage() {
       const user = data.user;
       navigate(user?.role === 'admin' ? '/admin' : state.from || '/');
     } catch (err) {
-      setError(err.response?.data?.error || 'OTP verification failed');
+      const message = err.response?.data?.details || err.response?.data?.error || 'OTP verification failed';
+      setError(message);
     } finally {
       setLoading(false);
     }

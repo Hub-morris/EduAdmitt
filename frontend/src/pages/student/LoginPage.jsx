@@ -29,7 +29,8 @@ export default function LoginPage() {
       const user = result.user;
       navigate(user.role === 'admin' ? '/admin' : from);
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed');
+      const message = err.response?.data?.details || err.response?.data?.error || 'Login failed';
+      setError(message);
     } finally {
       setLoading(false);
     }

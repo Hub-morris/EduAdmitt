@@ -7,6 +7,12 @@ import { sendMail } from '../config/mailer.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'eduadmit-dev-secret';
 
+export function normalizeFingerprint(fingerprint) {
+  if (typeof fingerprint !== 'string') return 'unknown';
+  const trimmed = fingerprint.trim();
+  return trimmed || 'unknown';
+}
+
 function validatePassword(pw) {
   if (!pw || pw.length < 8) return 'Password must be at least 8 characters long';
   if (!/[a-z]/.test(pw)) return 'Password must include a lowercase letter';
@@ -22,6 +28,19 @@ function createJwt(user) {
     JWT_SECRET,
     { expiresIn: '7d' }
   );
+}
+
+export function buildAuthErrorResponse(fallback, error) {
+  const details = error?.message || 'Unknown error';
+  console.error(`${fallback}:`, details);
+  if (error?.stack) {
+    console.error(error.stack);
+  }
+
+  return {
+    error: fallback,
+    details,
+  };
 }
 
 export async function registerController(req, res) {
@@ -51,17 +70,18 @@ export async function registerController(req, res) {
 
     res.status(201).json({ message: 'Registration successful. Please verify your email before logging in.' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Registration failed' });
+    res.status(500).json(buildAuthErrorResponse('Registration failed', err));
   }
 }
 
 export async function loginController(req, res) {
   try {
     const { email, password, fingerprint } = req.body;
-    if (!email || !password || !fingerprint) {
-      return res.status(400).json({ error: 'Email, password, and fingerprint are required' });
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
     }
+
+    const normalizedFingerprint = normalizeFingerprint(fingerprint);
 
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     if (!result.rows.length) {
@@ -94,8 +114,7 @@ export async function loginController(req, res) {
 
     res.json({ otpRequired: true, otpId: otpResult.rows[0].id, message: 'OTP sent to your email.' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Login failed' });
+    res.status(500).json(buildAuthErrorResponse('Login failed', err));
   }
 }
 
@@ -143,8 +162,7 @@ export async function loadOtpUser(req, res, next) {
 
     next();
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'OTP verification failed' });
+    res.status(500).json(buildAuthErrorResponse('OTP verification failed', err));
   }
 }
 
@@ -175,15 +193,16 @@ export async function verifyOtpController(req, res) {
     await pool.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [user.id]);
     req.session.otpVerified = true;
 
+    const normalizedFingerprint = normalizeFingerprint(fingerprint);
     const existingDevice = await pool.query(
       'SELECT id FROM devices WHERE user_id = $1 AND fingerprint = $2',
-      [user.id, fingerprint]
+      [user.id, normalizedFingerprint]
     );
 
     if (!existingDevice.rows.length) {
       await pool.query(
         'INSERT INTO devices (user_id, fingerprint, first_seen, last_seen) VALUES ($1, $2, NOW(), NOW())',
-        [user.id, fingerprint]
+        [user.id, normalizedFingerprint]
       );
       await sendMail(
         user.email,
@@ -203,7 +222,6 @@ export async function verifyOtpController(req, res) {
     const token = createJwt(user);
     res.json({ token, user: { id: user.id, email: user.email, role: user.role, fullName: user.fullName } });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'OTP verification failed' });
+    res.status(500).json(buildAuthErrorResponse('OTP verification failed', err));
   }
 }

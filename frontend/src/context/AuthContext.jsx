@@ -22,7 +22,16 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password, fingerprint) => {
-    const fp = fingerprint || await getDeviceFingerprint();
+    let fp = fingerprint;
+    if (!fp) {
+      try {
+        fp = await getDeviceFingerprint();
+      } catch (error) {
+        console.warn('Fingerprint unavailable, continuing with fallback', error);
+        fp = 'unknown';
+      }
+    }
+
     const { data } = await api.post('/auth/login', { email, password, fingerprint: fp });
     if (data.token) {
       localStorage.setItem('token', data.token);
