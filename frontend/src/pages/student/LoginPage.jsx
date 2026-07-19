@@ -54,6 +54,7 @@ export default function LoginPage() {
             </button>
           </form>
           <p className="auth-footer">Don't have an account? <Link to="/register">Register</Link></p>
+          <p className="auth-footer">Forgot your password? <Link to="/forgot-password">Reset it here</Link></p>
         </FadeIn>
       </main>
       <Footer />

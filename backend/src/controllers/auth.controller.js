@@ -4,6 +4,15 @@ import pool from '../config/db.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'eduadmit-dev-secret';
 
+function validatePassword(pw) {
+  if (!pw || pw.length < 8) return 'Password must be at least 8 characters long';
+  if (!/[a-z]/.test(pw)) return 'Password must include a lowercase letter';
+  if (!/[A-Z]/.test(pw)) return 'Password must include an uppercase letter';
+  if (!/[0-9]/.test(pw)) return 'Password must include a number';
+  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pw)) return 'Password must include a special character';
+  return null;
+}
+
 function createJwt(user) {
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
@@ -76,5 +85,30 @@ export async function loginController(req, res) {
     res.json({ token, user: { id: user.id, email: user.email, role: user.role, fullName: user.full_name } });
   } catch (err) {
     res.status(500).json(buildAuthErrorResponse('Login failed', err));
+  }
+}
+
+export async function forgotPasswordController(req, res) {
+  try {
+    const { email, newPassword } = req.body;
+    if (!email || !newPassword) {
+      return res.status(400).json({ error: 'Email and new password are required' });
+    }
+
+    const pwErr = validatePassword(newPassword);
+    if (pwErr) return res.status(400).json({ error: pwErr });
+
+    const result = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (!result.rows.length) {
+      return res.status(404).json({ error: 'Email not found' });
+    }
+
+    const user = result.rows[0];
+    const hash = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, user.id]);
+
+    res.json({ success: true, message: 'Password updated successfully. Please login with your new password.' });
+  } catch (err) {
+    res.status(500).json(buildAuthErrorResponse('Failed to reset password', err));
   }
 }

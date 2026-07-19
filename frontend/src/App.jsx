@@ -10,6 +10,7 @@ const ProgrammeDetailPage = lazy(() => import('./pages/student/ProgrammeDetailPa
 const SelectionPage = lazy(() => import('./pages/student/SelectionPage'));
 const LoginPage = lazy(() => import('./pages/student/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/student/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/student/ForgotPasswordPage'));
 const ApplicationPage = lazy(() => import('./pages/student/ApplicationPage'));
 const StatusPage = lazy(() => import('./pages/student/StatusPage'));
 const OfferLetterPage = lazy(() => import('./pages/student/OfferLetterPage'));
@@ -43,6 +44,7 @@ function AppRoutes() {
         <Route path="/programmes/:id" element={<ProgrammeDetailPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/select" element={<ProtectedRoute role="student"><SelectionPage /></ProtectedRoute>} />
         <Route path="/apply" element={<ProtectedRoute role="student"><ApplicationPage /></ProtectedRoute>} />

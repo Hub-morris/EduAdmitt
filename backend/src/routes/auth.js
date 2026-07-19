@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import {
   registerController,
   loginController,
+  forgotPasswordController,
 } from '../controllers/auth.controller.js';
 
 const router = express.Router();
@@ -26,6 +27,7 @@ function validatePassword(pw) {
 
 router.post('/register', registerController);
 router.post('/login', authLimiter, loginController);
+router.post('/forgot-password', authLimiter, forgotPasswordController);
 
 router.get('/me', async (req, res) => {
   try {
