@@ -11,12 +11,21 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendMail(to, subject, html) {
-  await transporter.sendMail({
-    from: `"eduAdmit" <${process.env.SMTP_USER}>`,
-    to,
-    subject,
-    html,
-  });
+  try {
+    const info = await transporter.sendMail({
+      from: `"eduAdmit" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html,
+    });
+    console.info('sendMail success:', { to, subject, messageId: info?.messageId });
+    return info;
+  } catch (err) {
+    console.error('sendMail failed:', err?.message || err);
+    if (err?.stack) console.error(err.stack);
+    // Do not throw — return null so callers can continue and backend doesn't 500
+    return null;
+  }
 }
 
 export default transporter;
