@@ -7,6 +7,7 @@ import session from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
 import pool, { initDb } from './config/db.js';
 import { seedData } from './seed.js';
+import { sendMail } from './config/mailer.js';
 import authRoutes from './routes/auth.js';
 import webauthnRoutes from './routes/webauthn.js';
 import programmeRoutes from './routes/programmes.js';
@@ -51,6 +52,23 @@ app.use('/api/letters', letterRoutes);
 app.use('/api/payments', paymentsRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+
+app.post('/api/debug/smtp', async (req, res) => {
+  try {
+    const testEmail = process.env.SMTP_USER;
+    if (!testEmail) {
+      return res.status(400).json({ error: 'SMTP_USER is not configured' });
+    }
+    const info = await sendMail(testEmail, 'eduAdmit SMTP test', '<p>If you receive this email, SMTP is working.</p>');
+    if (!info) {
+      return res.status(500).json({ error: 'SMTP test email failed' });
+    }
+    res.json({ success: true, messageId: info.messageId });
+  } catch (err) {
+    console.error('SMTP debug test failed:', err);
+    res.status(500).json({ error: 'SMTP debug test failed', details: err?.message || 'unknown' });
+  }
+});
 
 async function start() {
   try {
