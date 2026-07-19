@@ -56,40 +56,8 @@ export async function initDb() {
         password_hash VARCHAR(255) NOT NULL,
         role VARCHAR(20) NOT NULL DEFAULT 'student',
         full_name VARCHAR(255),
-        is_email_verified BOOLEAN DEFAULT false,
-        email_verification_token VARCHAR(255),
-        email_verification_expires TIMESTAMP,
         created_at TIMESTAMP DEFAULT NOW(),
         last_login_at TIMESTAMP
-      );
-
-      CREATE TABLE IF NOT EXISTS user_otps (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        code VARCHAR(10) NOT NULL,
-        expires_at TIMESTAMP NOT NULL,
-        attempts INTEGER DEFAULT 0,
-        used BOOLEAN DEFAULT false,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-
-      CREATE TABLE IF NOT EXISTS devices (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        fingerprint VARCHAR(500) NOT NULL,
-        first_seen TIMESTAMP DEFAULT NOW(),
-        last_seen TIMESTAMP DEFAULT NOW(),
-        UNIQUE(user_id, fingerprint)
-      );
-
-      CREATE TABLE IF NOT EXISTS webauthn_credentials (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        credential_id TEXT NOT NULL,
-        credential_public_key TEXT NOT NULL,
-        counter BIGINT NOT NULL,
-        transports JSONB,
-        created_at TIMESTAMP DEFAULT NOW()
       );
 
       CREATE TABLE IF NOT EXISTS students (
@@ -179,43 +147,10 @@ export async function initDb() {
       CREATE TABLE IF NOT EXISTS application_feedback (
         id SERIAL PRIMARY KEY,
         application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,
-        feedback_message TEXT NOT NULL,
-        requires_amendment BOOLEAN DEFAULT true,
-        created_by INTEGER REFERENCES users(id),
+        feedback TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       );
-      
-      CREATE TABLE IF NOT EXISTS payments (
-        id SERIAL PRIMARY KEY,
-        application_id INTEGER REFERENCES applications(id) ON DELETE SET NULL,
-        reference VARCHAR(100) NOT NULL UNIQUE,
-        amount DECIMAL(12,2) NOT NULL,
-        currency VARCHAR(10) DEFAULT 'KES',
-        status VARCHAR(50) DEFAULT 'pending',
-        provider VARCHAR(100),
-        provider_payload JSONB,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
-      );
     `);
-
-    await client.query(`
-      ALTER TABLE students ADD COLUMN IF NOT EXISTS county VARCHAR(100);
-      ALTER TABLE students ADD COLUMN IF NOT EXISTS emergency_contact_name VARCHAR(255);
-      ALTER TABLE students ADD COLUMN IF NOT EXISTS emergency_contact_phone VARCHAR(50);
-      ALTER TABLE applications ADD COLUMN IF NOT EXISTS qualification_reasoning TEXT;
-      ALTER TABLE applications ADD COLUMN IF NOT EXISTS amendment_count INTEGER DEFAULT 0;
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS is_email_verified BOOLEAN DEFAULT false;
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255);
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_expires TIMESTAMP;
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP;
-      ALTER TABLE applications ADD COLUMN IF NOT EXISTS last_amendment_at TIMESTAMP;
-      ALTER TABLE applications ADD COLUMN IF NOT EXISTS needs_amendment BOOLEAN DEFAULT false;
-      ALTER TABLE applications ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'pending';
-      ALTER TABLE applications ADD COLUMN IF NOT EXISTS payment_rejection_reason TEXT;
-    `);
-
-    console.log('Database initialized successfully');
   } finally {
     client.release();
   }

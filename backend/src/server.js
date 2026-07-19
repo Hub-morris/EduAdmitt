@@ -7,9 +7,7 @@ import session from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
 import pool, { initDb } from './config/db.js';
 import { seedData } from './seed.js';
-import { sendMail } from './config/mailer.js';
 import authRoutes from './routes/auth.js';
-import webauthnRoutes from './routes/webauthn.js';
 import programmeRoutes from './routes/programmes.js';
 import applicationRoutes from './routes/applications.js';
 import adminRoutes from './routes/admin.js';
@@ -45,7 +43,6 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.use('/api/auth', authRoutes);
-app.use('/api/webauthn', webauthnRoutes);
 app.use('/api', programmeRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/admin', adminRoutes);
@@ -53,21 +50,6 @@ app.use('/api/letters', letterRoutes);
 app.use('/api/payments', paymentsRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
-
-// TEMPORARY - REMOVE BEFORE SUBMISSION
-app.get('/api/debug/test-email', async (_req, res) => {
-  try {
-    const result = await sendMail({
-      to: 'eduadmitt2@gmail.com',
-      subject: 'eduAdmit Brevo test email',
-      html: '<p>If you receive this email, Brevo is configured correctly.</p>',
-    });
-    return res.json(result);
-  } catch (err) {
-    console.error('Brevo debug test failed:', err);
-    return res.status(500).json({ success: false, error: err?.message || 'unknown' });
-  }
-});
 
 async function start() {
   try {

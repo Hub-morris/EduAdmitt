@@ -2,15 +2,10 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import pool from '../config/db.js';
 import rateLimit from 'express-rate-limit';
-import { authMiddleware } from '../middleware/auth.js';
-import { checkLocation } from '../middleware/geo.middleware.js';
 import {
   registerController,
   loginController,
-  loadOtpUser,
-  verifyOtpController,
 } from '../controllers/auth.controller.js';
-import { verifyEmailToken } from '../controllers/email.controller.js';
 
 const router = express.Router();
 
@@ -30,11 +25,9 @@ function validatePassword(pw) {
 }
 
 router.post('/register', registerController);
-router.post('/login', authLimiter, checkLocation, loginController);
-router.post('/verify-otp', authLimiter, loadOtpUser, verifyOtpController);
-router.get('/verify-email', verifyEmailToken);
+router.post('/login', authLimiter, loginController);
 
-router.get('/me', authMiddleware, async (req, res) => {
+router.get('/me', async (req, res) => {
   try {
     const result = await pool.query(
       'SELECT u.id, u.email, u.role, u.full_name, s.id as student_id FROM users u LEFT JOIN students s ON s.user_id = u.id WHERE u.id = $1',
@@ -49,15 +42,15 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
-router.post('/change-password', authMiddleware, async (req, res) => {
+router.post('/change-password', async (req, res) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const { currentPassword, newPassword, userId } = req.body;
     if (!newPassword) return res.status(400).json({ error: 'New password is required' });
 
     const pwErr = validatePassword(newPassword);
     if (pwErr) return res.status(400).json({ error: pwErr });
 
-    const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
     if (!result.rows.length) return res.status(404).json({ error: 'User not found' });
     const user = result.rows[0];
 

@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../api/client';
-import { getDeviceFingerprint } from '../utils/fingerprint';
 
 const AuthContext = createContext(null);
 
@@ -21,33 +20,13 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = async (email, password, fingerprint) => {
-    let fp = fingerprint;
-    if (!fp) {
-      try {
-        fp = await getDeviceFingerprint();
-      } catch (error) {
-        console.warn('Fingerprint unavailable, continuing with fallback', error);
-        fp = 'unknown';
-      }
-    }
-
-    const { data } = await api.post('/auth/login', { email, password, fingerprint: fp });
+  const login = async (email, password) => {
+    const { data } = await api.post('/auth/login', { email, password });
     if (data.token) {
       localStorage.setItem('token', data.token);
       setUser(data.user);
       setShowChangePasswordPrompt(true);
       return { user: data.user };
-    }
-    return { ...data, fingerprint: fp };
-  };
-
-  const verifyOtp = async ({ otpId, code, fingerprint }) => {
-    const { data } = await api.post('/auth/verify-otp', { otpId, code, fingerprint });
-    if (data.token) {
-      localStorage.setItem('token', data.token);
-      setUser(data.user);
-      setShowChangePasswordPrompt(true);
     }
     return data;
   };
@@ -68,7 +47,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, verifyOtp, register, logout, setUser, changePassword, showChangePasswordPrompt, setShowChangePasswordPrompt }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser, changePassword, showChangePasswordPrompt, setShowChangePasswordPrompt }}>
       {children}
     </AuthContext.Provider>
   );
