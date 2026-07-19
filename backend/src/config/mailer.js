@@ -4,13 +4,14 @@ const client = SibApiV3Sdk.ApiClient.instance;
 client.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
 const emailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
-interface MailOptions {
-  to: string;
-  subject: string;
-  html: string;
-}
+/**
+ * @typedef {{ to: string; subject: string; html: string }} MailOptions
+ */
 
-export async function sendMail({ to, subject, html }: MailOptions): Promise<{ success: boolean; error?: string }> {
+/**
+ * @param {MailOptions} options
+ */
+export async function sendMail({ to, subject, html }) {
   try {
     await emailApi.sendTransacEmail({
       sender: {
@@ -23,7 +24,7 @@ export async function sendMail({ to, subject, html }: MailOptions): Promise<{ su
     });
     console.log(`Email sent successfully to ${to}`);
     return { success: true };
-  } catch (err: any) {
+  } catch (err) {
     console.error(`Brevo send failed for ${to}:`, err?.message || err);
     return { success: false, error: err?.message || 'Unknown error' };
   }
