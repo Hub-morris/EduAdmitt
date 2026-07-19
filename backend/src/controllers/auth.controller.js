@@ -106,11 +106,15 @@ export async function loginController(req, res) {
       [user.id, otpCode]
     );
 
-    await sendMail(
-      user.email,
-      'Your eduAdmit login code',
-      `<p>Your one-time login code is <strong>${otpCode}</strong>. It expires in 10 minutes.</p>`
-    );
+    sendMail({
+      to: user.email,
+      subject: 'Your eduAdmit login code',
+      html: `<p>Your one-time login code is <strong>${otpCode}</strong>. It expires in 10 minutes.</p>`,
+    }).then((result) => {
+      if (!result.success) {
+        console.error('OTP email failed:', result.error);
+      }
+    });
 
     res.json({ otpRequired: true, otpId: otpResult.rows[0].id, message: 'OTP sent to your email.' });
   } catch (err) {

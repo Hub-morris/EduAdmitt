@@ -1,34 +1,30 @@
-import nodemailer from 'nodemailer';
+import SibApiV3Sdk from 'sib-api-v3-sdk';
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
-});
+const client = SibApiV3Sdk.ApiClient.instance;
+client.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
+const emailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
-export async function sendMail(to, subject, html) {
-  try {
-    const info = await transporter.sendMail({
-      from: `"eduAdmit" <${process.env.SMTP_USER}>`,
-      to,
-      subject,
-      html,
-    });
-    console.info('sendMail success:', { to, subject, messageId: info?.messageId });
-    return info;
-  } catch (err) {
-    console.error('sendMail failed:', err?.message || err);
-    if (err?.stack) console.error(err.stack);
-    // Do not throw — return null so callers can continue and backend doesn't 500
-    return null;
-  }
+interface MailOptions {
+  to: string;
+  subject: string;
+  html: string;
 }
 
-export default transporter;
+export async function sendMail({ to, subject, html }: MailOptions): Promise<{ success: boolean; error?: string }> {
+  try {
+    await emailApi.sendTransacEmail({
+      sender: {
+        email: process.env.EMAIL_FROM,
+        name: process.env.EMAIL_FROM_NAME || 'eduAdmit',
+      },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    });
+    console.log(`Email sent successfully to ${to}`);
+    return { success: true };
+  } catch (err: any) {
+    console.error(`Brevo send failed for ${to}:`, err?.message || err);
+    return { success: false, error: err?.message || 'Unknown error' };
+  }
+}

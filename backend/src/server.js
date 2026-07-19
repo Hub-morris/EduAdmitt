@@ -54,20 +54,18 @@ app.use('/api/payments', paymentsRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
-app.post('/api/debug/smtp', async (req, res) => {
+// TEMPORARY - REMOVE BEFORE SUBMISSION
+app.get('/api/debug/test-email', async (_req, res) => {
   try {
-    const testEmail = process.env.SMTP_USER;
-    if (!testEmail) {
-      return res.status(400).json({ error: 'SMTP_USER is not configured' });
-    }
-    const info = await sendMail(testEmail, 'eduAdmit SMTP test', '<p>If you receive this email, SMTP is working.</p>');
-    if (!info) {
-      return res.status(500).json({ error: 'SMTP test email failed' });
-    }
-    res.json({ success: true, messageId: info.messageId });
+    const result = await sendMail({
+      to: 'eduadmitt2@gmail.com',
+      subject: 'eduAdmit Brevo test email',
+      html: '<p>If you receive this email, Brevo is configured correctly.</p>',
+    });
+    return res.json(result);
   } catch (err) {
-    console.error('SMTP debug test failed:', err);
-    res.status(500).json({ error: 'SMTP debug test failed', details: err?.message || 'unknown' });
+    console.error('Brevo debug test failed:', err);
+    return res.status(500).json({ success: false, error: err?.message || 'unknown' });
   }
 });
 

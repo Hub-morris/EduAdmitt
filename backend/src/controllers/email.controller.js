@@ -13,12 +13,16 @@ export async function sendVerificationEmail(userId, email) {
 
   const link = `${process.env.ORIGIN}/api/auth/verify-email?token=${token}`;
 
-  await sendMail(
-    email,
-    'Verify your eduAdmit account',
-    `<p>Click the link below to verify your email. This link expires in 1 hour.</p>
-     <p><a href="${link}">${link}</a></p>`
-  );
+  sendMail({
+    to: email,
+    subject: 'Verify your eduAdmit account',
+    html: `<p>Click the link below to verify your email. This link expires in 1 hour.</p>
+     <p><a href="${link}">${link}</a></p>`,
+  }).then((result) => {
+    if (!result.success) {
+      console.error('Verification email failed:', result.error);
+    }
+  });
 }
 
 export async function verifyEmailToken(req, res) {

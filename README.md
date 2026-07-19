@@ -91,11 +91,9 @@ SESSION_SECRET=eduadmit_session_secret_change_in_production
 RP_NAME=eduAdmit
 RP_ID=localhost
 ORIGIN=http://localhost:4175
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-SMTP_SECURE=false
+BREVO_API_KEY=your-brevo-api-key
+EMAIL_FROM=your-verified-email@example.com
+EMAIL_FROM_NAME=eduAdmit
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4o-mini
 ```
@@ -106,13 +104,11 @@ For live deployment, set `ORIGIN` to your public frontend URL, for example:
 ORIGIN=https://eduadmit.example.com
 ```
 
-Also configure a real SMTP provider for email delivery, including:
+Also configure a real Brevo API key and verified sender for email delivery:
 
-- `SMTP_HOST`
-- `SMTP_PORT`
-- `SMTP_USER`
-- `SMTP_PASS`
-- `SMTP_SECURE`
+- `BREVO_API_KEY`
+- `EMAIL_FROM`
+- `EMAIL_FROM_NAME`
 
 The app uses these values to send verification emails and OTP codes.
 
@@ -126,11 +122,9 @@ Example commands:
 cd backend
 fly secrets set \
   ORIGIN=https://eduadmit.example.com \
-  SMTP_HOST=smtp.gmail.com \
-  SMTP_PORT=587 \
-  SMTP_USER=your-email@gmail.com \
-  SMTP_PASS=your-app-password \
-  SMTP_SECURE=false \
+  BREVO_API_KEY=your_brevo_api_key \
+  EMAIL_FROM=your-verified-email@example.com \
+  EMAIL_FROM_NAME=eduAdmit \
   JWT_SECRET=your_jwt_secret \
   SESSION_SECRET=your_session_secret
 ```

@@ -24,11 +24,15 @@ export async function checkDevice(req, res, next) {
       [user.id, fingerprint]
     );
 
-    await sendMail(
-      user.email,
-      'New device login detected — eduAdmit',
-      `<p>A login was just made from a device we haven't seen before. If this wasn't you, please reset your password immediately.</p>`
-    );
+    sendMail({
+      to: user.email,
+      subject: 'New device login detected — eduAdmit',
+      html: `<p>A login was just made from a device we haven't seen before. If this wasn't you, please reset your password immediately.</p>`,
+    }).then((result) => {
+      if (!result.success) {
+        console.error('New device email failed:', result.error);
+      }
+    });
 
     req.isNewDevice = true;
   } else {
