@@ -26,9 +26,10 @@ app.use(cors({ origin: process.env.ORIGIN || 'http://localhost:3000', credential
 app.use(express.json());
 
 const PgSession = connectPgSimple(session);
+app.set('trust proxy', 1);
 app.use(
   session({
-    store: new PgSession({ pool, tableName: 'session' }),
+    store: new PgSession({ pool, tableName: 'session', createTableIfMissing: true }),
     secret: process.env.SESSION_SECRET || 'eduadmit-session-secret',
     resave: false,
     saveUninitialized: false,
